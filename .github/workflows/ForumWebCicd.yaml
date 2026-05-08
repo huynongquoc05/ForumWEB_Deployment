@@ -70,15 +70,11 @@ jobs:
           DB_PASS: ${{ secrets.DB_PASS }}
         # Truyền mật khẩu thẳng vào biến SQLCMDPASSWORD trong container qua cờ -e
         # Xóa bỏ hoàn toàn cờ -P khỏi lệnh sqlcmd
-        run: docker exec -e SQLCMDPASSWORD="$DB_PASS" forum_sql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -i /ForumWEB.sql
+        run: docker exec forum_sql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$DB_PASS" -C -i /ForumWEB.sql
       - name: Kiểm tra trạng thái các Container
         run: docker compose ps
 
-      - name: chờ fill dữ liệu vào sql server
-        run: sleep 20
 
-      - name: Kiểm tra trạng thái các Container
-        run: docker compose ps
 
       - name: Kiểm tra kết nối Web (Ping thử Nginx)
         run: curl -f http://localhost:8005 || exit 1
