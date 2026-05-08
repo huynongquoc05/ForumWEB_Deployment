@@ -51,6 +51,11 @@ jobs:
       - name: Giải mã file bảo mật từ Base64
         run: echo "${{ secrets.ENV_B64 }}" | base64 --decode > .env
 
+      - name: tạo mạng Docker
+        run: |
+          docker network create backend_network || true
+          docker network create frontend_network || true
+          docker network create monitoring_network || true
       - name: Build và khởi chạy hệ thống bằng Docker Compose
         run: |
           docker compose up -d --build --scale web=2
