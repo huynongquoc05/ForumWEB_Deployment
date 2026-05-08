@@ -66,8 +66,11 @@ jobs:
 
 
       - name: fill sql data
-        run: docker exec forum_sql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P ${{secrets.DB_PASS}} -C -i /ForumWEB.sql
-
+        env:
+          DB_PASS: ${{ secrets.DB_PASS }}
+        # Truyền mật khẩu thẳng vào biến SQLCMDPASSWORD trong container qua cờ -e
+        # Xóa bỏ hoàn toàn cờ -P khỏi lệnh sqlcmd
+        run: docker exec -e SQLCMDPASSWORD="$DB_PASS" forum_sql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -i /ForumWEB.sql
       - name: Kiểm tra trạng thái các Container
         run: docker compose ps
 
