@@ -1,0 +1,89 @@
+/* ================= KHUNG CHÍNH ================= */
+.user-profile-container {
+    max-width: 900px;
+    margin: 30px auto;
+}
+
+/* ================= PROFILE HEADER (Ảnh bìa & Avatar) ================= */
+.profile-header {
+    background-color: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    margin-bottom: 40px;
+    overflow: hidden; /* Cắt góc tròn cho ảnh bìa */
+}
+
+/* Ảnh bìa (Cover Photo) */
+.profile-cover {
+    height: 200px;
+    width: 100%;
+    /* Gradient tuyệt đẹp tạo cảm giác mượt mà */
+    background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+}
+
+/* Phần chứa Avatar và Tên */
+.profile-body {
+    padding: 0 40px 30px 40px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Avatar to, đẩy lên trên cắt ngang ảnh bìa */
+.profile-avatar-large {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid var(--card-bg); /* Tạo viền trắng tách biệt với ảnh bìa */
+    margin-top: -65px; /* Kéo avatar lùi lên trên 50% chiều cao của nó */
+    background-color: white;
+}
+
+.profile-details {
+    margin-top: 15px;
+}
+
+.profile-details h1 {
+    font-size: 28px;
+    color: var(--text-main);
+    margin-bottom: 10px;
+}
+
+.profile-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* Tái sử dụng style của Badge (Nên đã có ở account.css, nếu bạn gộp file thì khỏi cần ghi lại đoạn này) */
+.badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.badge-admin { background-color: #ef4444; color: white; }
+.badge-user { background-color: #10b981; color: white; }
+
+
+/* ================= RESPONSIVE ĐIỆN THOẠI ================= */
+@media (max-width: 768px) {
+    .profile-body {
+        padding: 0 20px 20px 20px;
+        align-items: center; /* Căn giữa mọi thứ trên mobile */
+        text-align: center;
+    }
+
+    .profile-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Thêm Bài Viết - ForumDev{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Style4addPosts.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="editor-container">
+    <div class="editor-header">
+        <h2><i class="fa-solid fa-pen-nib text-primary"></i> Tạo bài viết mới</h2>
+        <p>Chia sẻ kiến thức, tin tức hoặc đặt câu hỏi cho cộng đồng.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="post-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Ô nhập Tiêu đề -->
+        <div class="form-group">
+            <label for="title" class="form-label">Tiêu đề bài viết <span class="required">*</span></label>
+            <input type="text" id="title" name="title" class="form-control" placeholder="Nhập tiêu đề ngắn gọn, súc tích..." required>
+        </div>
+
+        <!-- Chọn Chuyên mục -->
+        <div class="form-group">
+            <label for="category_id" class="form-label">Chuyên mục <span class="required">*</span></label>
+            <select id="category_id" name="category_id" class="form-control">
+                <option value="" disabled selected>-- Chọn chuyên mục phù hợp --</option>
+                {% for category in categories %}
+                    <option value="{{ category.category_id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Ô nhập Nội dung -->
+        <div class="form-group">
+            <label for="content" class="form-label">Nội dung <span class="required">*</span></label>
+            <textarea id="content" name="content" class="form-control editor-textarea" placeholder="Nội dung bài viết của bạn..." required></textarea>
+            <small class="helper-text"><i class="fa-solid fa-circle-info"></i> Để chèn ảnh từ máy tính, hãy click vào nút Tải ảnh bên dưới, hệ thống sẽ tự chèn mã ảnh vào đây.</small>
+        </div>
+
+        <!-- Khu vực Tải ảnh -->
+        <div class="form-group upload-group">
+            <label class="form-label">Đính kèm hình ảnh</label>
+
+            <!-- Ẩn input file mặc định xấu xí đi -->
+            <input type="file" id="upload-image" name="images" accept="image/*" multiple onchange="handleFileUpload(event)" style="display: none;">
+
+            <!-- Nút Upload giả lập đẹp mắt -->
+            <label for="upload-image" class="custom-upload-btn">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Click để chọn ảnh tải lên</span>
+            </label>
+
+            <!-- Khu vực hiển thị ảnh xem trước -->
+            <div id="preview-container" class="preview-grid"></div>
+        </div>
+
+        <!-- Nút Submit -->
+        <div class="form-actions">
+            <a href="javascript:history.back()" class="btn-cancel">Hủy bỏ</a>
+            <button type="submit" class="btn-primary btn-large"><i class="fa-solid fa-paper-plane"></i> Đăng bài viết</button>
+        </div>
+    </form>
+</div>
+
+<!-- Giữ nguyên Logic JS của bạn, chỉ thêm class để style cho ảnh -->
+<script>
+    function handleFileUpload(event) {
+        const files = event.target.files;
+        const previewContainer = document.getElementById("preview-container");
+        const contentArea = document.getElementById("content");
+
+        for (const file of files) {
+            // Tạo URL cho file để xem trước
+            const imgUrl = URL.createObjectURL(file);
+
+            // Tạo thẻ div bọc ngoài để làm đẹp
+            const imgWrapper = document.createElement("div");
+            imgWrapper.className = "preview-item";
+
+            // Hiển thị ảnh
+            const img = document.createElement("img");
+            img.src = imgUrl;
+            img.alt = "Preview Image";
+            imgWrapper.appendChild(img);
+
+            previewContainer.appendChild(imgWrapper);
+
+            // Thêm đường dẫn vào textarea
+            contentArea.value += `\n<img src="/static/uploads/${file.name}" alt="Ảnh đính kèm">\n`;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý tài khoản - ForumDev{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='account.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- Phần 1: Thông tin người dùng -->
+    <div class="profile-header-card">
+        <img src="{{ url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Avatar" class="profile-avatar">
+        <div class="profile-info">
+            <h1>Tài khoản: <a href="{{ url_for('auth.personal_page', user_id=session['user_id']) }}" class="text-primary">{{ user_info.username }}</a></h1>
+            <div class="profile-meta">
+                <span class="badge {% if user_info.role == 'admin' %}badge-admin{% else %}badge-user{% endif %}">
+                    <i class="fa-solid fa-user-shield"></i> {{ user_info.role | capitalize }}
+                </span>
+                <span class="join-date"><i class="fa-regular fa-calendar-check"></i> Tham gia: {{ user_info.created_at }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phần 2: Lịch sử hoạt động (Timeline) -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử hoạt động</h2>
+        <div class="timeline">
+            {% for activity in activity_history %}
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <span class="time">{{ activity.date.strftime('%d/%m/%Y %H:%M') }}</span>
+                        <span class="action"><strong>{{ user_info.username }}</strong> {{ activity.action }}</span>
+                    </div>
+
+                    <div class="timeline-body">
+                        {% if activity.title and activity.post_id %}
+                            <a href="{{ url_for('auth.view_post', post_id=activity.post_id) }}" class="post-link">{{ activity.title }}</a>
+                            {% if activity.content %}<p>{{ activity.content }}</p>{% endif %}
+                            {% if activity.status %}
+                                <span class="status-tag">({{ activity.status }})</span>
+                            {% endif %}
+
+                        {% elif activity.content and activity.post_id %}
+                            <p>{{ activity.content }}</p>
+                            <a href="{{ url_for('auth.view_post', post_id=activity.post_id) }}" class="view-link">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></a>
+
+                        {% elif activity.content %}
+                            <p>{{ activity.content }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+                <p class="text-muted">Chưa có hoạt động nào được ghi nhận.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Phần 3: Bài viết công khai -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fa-solid fa-globe"></i> Bài viết công khai của bạn</h2>
+        <div class="post-list">
+            {% for post in posts %}
+                {% if post['status'] == 'approved' %}
+                <article class="post-card post-card-horizontal admin-post-card">
+                    <div class="post-thumb">
+                        <img src="{{ post['thumbnail'] or url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Thumbnail">
+                        <span class="status-badge success">Đã duyệt</span>
+                    </div>
+                    <div class="post-info">
+                        <h3 class="post-title"><a href="{{ url_for('auth.view_post', post_id=post['post_id']) }}">{{ post['title'] }}</a></h3>
+                        <p class="post-excerpt">{{ post['content'] | truncate(100) }}</p>
+                        <div class="post-meta">
+                            <span><i class="fa-regular fa-clock"></i> {{ post['created_at'].strftime('%d/%m/%Y %H:%M') }}</span>
+                        </div>
+
+                        <!-- Nút Quản lý -->
+                        <div class="post-management-actions">
+                            {% if is_admin == 'admin' or session['user_id'] == post['user_id'] %}
+                                <a href="{{ url_for('auth.update_post', post_id=post['post_id']) }}" class="btn-edit"><i class="fa-solid fa-pen"></i> Sửa</a>
+                            {% endif %}
+                            {% if is_admin == 'admin' %}
+                                <form action="{{ url_for('auth.delete_post', post_id=post['post_id']) }}" method="post" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-delete" onclick="return confirm('Xóa bài viết này?');"><i class="fa-solid fa-trash"></i> Xóa</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Phần 4: Bài viết chờ duyệt (User thường) -->
+    {% if is_admin != 'admin' %}
+    <section class="dashboard-section">
+        <h2 class="section-title text-orange"><i class="fa-solid fa-hourglass-half"></i> Bài viết đang chờ duyệt</h2>
+        <div class="post-list">
+            {% for post in posts %}
+                {% if post['status'] == 'pending' %}
+                <article class="post-card post-card-horizontal admin-post-card">
+                    <div class="post-thumb">
+                        <img src="{{ post['thumbnail'] or url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Thumbnail">
+                        <span class="status-badge warning">Chờ duyệt</span>
+                    </div>
+                    <div class="post-info">
+                        <h3 class="post-title"><a href="{{ url_for('auth.view_pending_post', post_id=post['post_id']) }}">{{ post['title'] }}</a></h3>
+                        <p class="post-excerpt">{{ post['content'] | truncate(100) }}</p>
+                        <div class="post-meta">
+                            <span><i class="fa-regular fa-clock"></i> {{ post['created_at'].strftime('%d/%m/%Y %H:%M') }}</span>
+                        </div>
+                        <div class="post-management-actions">
+                            <a href="{{ url_for('auth.update_post', post_id=post['post_id']) }}" class="btn-edit"><i class="fa-solid fa-pen"></i> Sửa</a>
+                            <form action="{{ url_for('auth.delete_post', post_id=post['post_id']) }}" method="post" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-delete" onclick="return confirm('Rút lại bài viết này?');"><i class="fa-solid fa-trash"></i> Xóa</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Phần 5: Khu vực Dành riêng cho ADMIN -->
+    {% if is_admin == 'admin' %}
+    <div class="admin-zone">
+        <div class="admin-zone-header">
+            <h2><i class="fa-solid fa-screwdriver-wrench"></i> Khu vực Quản trị viên</h2>
+        </div>
+
+        <!-- Duyệt bài viết -->
+        <section class="dashboard-section">
+            <h3 class="section-title text-orange"><i class="fa-solid fa-clipboard-check"></i> Cần bạn phê duyệt</h3>
+            <div class="post-list">
+                {% for post in posts %}
+                    {% if post['status'] == 'pending' %}
+                    <article class="post-card post-card-horizontal admin-post-card">
+                        <div class="post-thumb">
+                            <img src="{{ post['thumbnail'] or url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Thumbnail">
+                            <span class="status-badge warning">Chờ duyệt</span>
+                        </div>
+                        <div class="post-info">
+                            <h3 class="post-title"><a href="{{ url_for('auth.view_pending_post', post_id=post['post_id']) }}">{{ post['title'] }}</a></h3>
+                            <p class="post-excerpt">{{ post['content'] | truncate(100) }}</p>
+                            <div class="post-meta">
+                                <span><i class="fa-regular fa-clock"></i> {{ post['created_at'].strftime('%d/%m/%Y %H:%M') }}</span>
+                            </div>
+
+                            <div class="post-management-actions">
+                                <form action="{{ url_for('auth.approve_post', post_id=post['post_id']) }}" method="post" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-approve"><i class="fa-solid fa-check"></i> Duyệt bài</button>
+                                </form>
+                                <form action="{{ url_for('auth.delete_post', post_id=post['post_id']) }}" method="post" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-delete" onclick="return confirm('Từ chối và xóa bài viết này?');"><i class="fa-solid fa-xmark"></i> Xóa</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Thống kê người dùng -->
+        {% if user_info['users_post_counts'] %}
+        <section class="dashboard-section">
+            <h3 class="section-title"><i class="fa-solid fa-users"></i> Thống kê thành viên</h3>
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Người dùng</th>
+                            <th>Vai trò</th>
+                            <th>Số bài viết</th>
+                            <th>Ngày tham gia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in user_info['users_post_counts'] %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('auth.personal_page', user_id=user[0]) }}" class="table-user-link">
+                                    <img src="{{ url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Avatar" class="table-avatar">
+                                    {{ user[1] }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge {% if user[2] == 'admin' %}badge-admin{% else %}badge-user{% endif %}">{{ user[2] }}</span>
+                            </td>
+                            <td class="text-center"><strong>{{ user[4] }}</strong></td>
+                            <td>{{ user[3].strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Cập Nhật Bài Viết{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Style4addPosts.css') }}">
+{% endblock %}
+
+{% block content %}
+<h2>Cập nhật bài viết</h2>
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="title">Tiêu đề:</label>
+    <input type="text" id="title" name="title" value="{{ title }}" required>
+
+    <label for="category_id">Chuyên mục:</label>
+    <select id="category_id" name="category_id">
+        {% for category in categories %}
+            <option value="{{ category.category_id }}" {% if category.category_id == category_id %}selected{% endif %}>{{ category.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="content">Nội dung (để nhập ảnh, gõ -uplimg(Địa chỉ ảnh)):</label>
+    <textarea id="content" name="content" rows="10" required>{{ content }}</textarea>
+
+    <button type="submit">Cập nhật bài viết</button>
+</form>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Hỏi đáp - ForumDev{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{% endblock %}
+
+{% block content %}
+    <!-- Tiêu đề trang Hỏi đáp -->
+    <div class="page-header">
+        <h1><i class="fa-solid fa-circle-question text-blue"></i> Hỏi đáp & Thảo luận</h1>
+        <p>Nơi giải đáp thắc mắc, chia sẻ kinh nghiệm và hỗ trợ lẫn nhau từ cộng đồng.</p>
+
+        <!-- Nút Kêu gọi hành động (Call to Action) dành riêng cho trang Hỏi đáp -->
+        <div style="margin-top: 20px;">
+            <a href="{{ url_for('auth.add_post') }}" class="btn-primary" style="font-size: 16px; padding: 10px 24px;">
+                <i class="fa-solid fa-pen"></i> Đặt câu hỏi ngay
+            </a>
+        </div>
+    </div>
+
+    <!-- Danh sách bài viết dạng ngang -->
+    <div class="post-list">
+        {% for post in posts %}
+            <article class="post-card post-card-horizontal">
+                <!-- Ảnh đại diện -->
+                <div class="post-thumb">
+                    <!-- Nếu không có ảnh, dùng ảnh mặc định -->
+                    <img src="{{ post['thumbnail'] or url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Thumbnail">
+                    <!-- Badge đổi màu xanh ngọc để phân biệt với Tin tức -->
+                    <span class="category-badge" style="background: rgba(16, 185, 129, 0.9);">
+                        <i class="fa-solid fa-clipboard-question"></i> Hỏi đáp
+                    </span>
+                </div>
+
+                <!-- Thông tin bài viết -->
+                <div class="post-info">
+                    <h2 class="post-title">
+                        <a href="{{ url_for('auth.view_post', post_id=post['post_id']) }}">
+                            {{ post['title'] }}
+                        </a>
+                    </h2>
+
+                    <!-- Cắt ngắn nội dung nếu quá dài (150 ký tự) -->
+                    <p class="post-excerpt">
+                        {{ post['content'] | truncate(150) }}
+                    </p>
+
+                    <div class="post-meta">
+                        <span class="author"><i class="fa-solid fa-user-astronaut"></i> {{ post['author'] }}</span>
+                        <span class="date"><i class="fa-regular fa-clock"></i> {{ post['created_at'] }}</span>
+                    </div>
+                </div>
+            </article>
+        {% else %}
+            <!-- Giao diện khi chưa có ai đặt câu hỏi -->
+            <div class="empty-state">
+                <i class="fa-regular fa-comments"></i>
+                <h3>Chưa có câu hỏi nào</h3>
+                <p>Hãy là người đầu tiên đặt câu hỏi cho cộng đồng!</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,216 @@
+/* ================= KHUNG DASHBOARD ================= */
+.dashboard-container {
+    max-width: 900px;
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.dashboard-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.section-title {
+    font-size: 20px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ================= PROFILE HEADER ================= */
+.profile-header-card {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: white;
+    padding: 40px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    object-fit: cover;
+}
+
+.profile-info h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.profile-info h1 a { color: #fff; }
+.profile-info h1 a:hover { text-decoration: underline; }
+
+.profile-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 15px;
+}
+
+/* Badges (Nhãn) */
+.badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge-admin { background-color: #ef4444; color: white; }
+.badge-user { background-color: #10b981; color: white; }
+
+.status-badge {
+    position: absolute; top: 10px; left: 10px;
+    padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; color: white;
+}
+.status-badge.success { background-color: #10b981; }
+.status-badge.warning { background-color: #f59e0b; }
+
+/* ================= TIMELINE (Lịch sử hoạt động) ================= */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+/* Trục dọc */
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e5e7eb;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.timeline-icon {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    box-shadow: 0 0 0 4px #eff6ff;
+}
+
+.timeline-content {
+    background-color: #f9fafb;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.timeline-header .time { color: var(--text-muted); }
+.timeline-body .post-link { font-weight: 600; color: var(--primary-color); display: block; margin-bottom: 5px; }
+.timeline-body p { font-size: 14px; color: #4b5563; }
+
+/* ================= BÀI VIẾT QUẢN LÝ (Chứa các nút chức năng) ================= */
+.admin-post-card {
+    position: relative;
+}
+
+.post-management-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.post-management-actions button, .post-management-actions a {
+    padding: 6px 15px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.btn-edit { background-color: #f3f4f6; color: #374151; }
+.btn-edit:hover { background-color: #e5e7eb; }
+
+.btn-delete { background-color: #fee2e2; color: #ef4444; }
+.btn-delete:hover { background-color: #fecaca; }
+
+.btn-approve { background-color: #d1fae5; color: #059669; }
+.btn-approve:hover { background-color: #a7f3d0; }
+
+/* ================= ADMIN ZONE ================= */
+.admin-zone {
+    border: 2px solid #ef4444; /* Viền đỏ để phân biệt khu admin */
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.admin-zone-header {
+    background-color: #fef2f2;
+    color: #ef4444;
+    padding: 15px 30px;
+    border-bottom: 1px solid #fecaca;
+}
+
+/* ================= BẢNG HIỆN ĐẠI (Modern Table) ================= */
+.table-responsive { overflow-x: auto; }
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+.modern-table th {
+    background-color: #f3f4f6;
+    color: #374151;
+    text-align: left;
+    padding: 12px 15px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.modern-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+.modern-table tbody tr:hover { background-color: #f9fafb; }
+
+.table-user-link { display: flex; align-items: center; gap: 10px; font-weight: 500; color: var(--text-main); }
+.table-user-link:hover { color: var(--primary-color); }
+.table-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+.text-center { text-align: center; }

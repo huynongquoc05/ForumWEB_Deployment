@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Trang cá nhân của {{ username }} - ForumDev{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='userpage.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="user-profile-container">
+
+    <!-- Phần 1: Header Trang cá nhân (Cover & Avatar) -->
+    <div class="profile-header">
+        <!-- Ảnh bìa -->
+        <div class="profile-cover"></div>
+
+        <!-- Thông tin User -->
+        <div class="profile-body">
+            <img src="{{ url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Avatar" class="profile-avatar-large">
+
+            <div class="profile-details">
+                <h1>{{ username }}</h1>
+                <div class="profile-meta">
+                    <!-- Phân biệt màu sắc dựa trên Role -->
+                    <span class="badge {% if role == 'admin' %}badge-admin{% else %}badge-user{% endif %}">
+                        {% if role == 'admin' %}<i class="fa-solid fa-user-shield"></i>{% else %}<i class="fa-solid fa-user"></i>{% endif %}
+                        {{ role | capitalize }}
+                    </span>
+                    <span class="join-date"><i class="fa-regular fa-calendar-days"></i> Thành viên từ: {{ created_at }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phần 2: Danh sách bài viết của người dùng -->
+    <div class="user-posts-section">
+        <div class="section-header">
+            <h2><i class="fa-solid fa-pen-nib text-blue"></i> Bài viết của {{ username }}</h2>
+        </div>
+
+        <div class="post-list">
+            {% for post in posts %}
+                <article class="post-card post-card-horizontal">
+                    <div class="post-thumb">
+                        <img src="{{ post['thumbnail'] or url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Thumbnail">
+                    </div>
+
+                    <div class="post-info">
+                        <h3 class="post-title">
+                            <a href="{{ url_for('auth.view_post', post_id=post['post_id']) }}">{{ post['title'] }}</a>
+                        </h3>
+                        <!-- Cắt ngắn nội dung -->
+                        <p class="post-excerpt">{{ post['content'] | truncate(150) }}</p>
+
+                        <div class="post-meta">
+                            <span><i class="fa-regular fa-clock"></i> Đăng lúc: {{ post['created_at'].strftime('%d/%m/%Y %H:%M') }}</span>
+                        </div>
+                    </div>
+                </article>
+            {% else %}
+                <!-- Trạng thái trống nếu user chưa có bài nào -->
+                <div class="empty-state">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <h3>Chưa có bài viết nào</h3>
+                    <p>{{ username }} chưa đăng bất kỳ bài viết nào trên diễn đàn.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

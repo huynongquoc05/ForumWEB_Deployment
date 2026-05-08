@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - ForumDev{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='postdetail.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="post-detail-container">
+
+    <!-- Phần Nội dung bài viết -->
+    <article class="main-post">
+        <header class="post-header">
+            <h1 class="post-title">{{ post.title }}</h1>
+            <div class="post-meta">
+                <div class="author-info">
+                    <img src="{{ url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Avatar" class="avatar">
+                    <div class="author-text">
+                        <a href="{{ author_profile_link }}" class="author-name">{{ post.author }}</a>
+                        <span class="post-date">
+                            <i class="fa-regular fa-clock"></i> Đã đăng: {{ post.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            {% if post['updated_at'] != post.created_at %}
+                                &bull; <i class="fa-solid fa-pen"></i> Đã sửa: {{ post['updated_at'].strftime('%d/%m/%Y %H:%M') }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Nút thao tác của chủ bài viết -->
+                {% if post['author_id'] == session['user_id'] %}
+                <div class="post-actions">
+                    <a href="{{ url_for('auth.update_post', post_id=post['post_id']) }}" class="btn-icon text-blue" title="Chỉnh sửa"><i class="fa-solid fa-pen-to-square"></i></a>
+                    <a href="{{ url_for('auth.delete_post', post_id=post['post_id']) }}" class="btn-icon text-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa bài viết này?');" title="Xóa"><i class="fa-solid fa-trash"></i></a>
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        <div class="post-content">
+            {{ post.content | safe }}
+        </div>
+
+        <!-- Khu vực Cảm xúc của bài viết -->
+        <div class="post-footer">
+            <div id="reactions" class="reaction-section">
+                <span class="reaction-count"><i class="fa-solid fa-heart text-danger"></i> <span id="post-reaction-count-text">{{ reaction_count }}</span> cảm xúc</span>
+
+                <div class="chooseReact">
+                    <button id="reaction-button" class="btn-react {{ user_reaction | lower }}">
+                        <i class="fa-regular fa-thumbs-up"></i> {{ user_reaction or 'Thích' }}
+                    </button>
+                    <div id="reaction-list" class="reaction-popup">
+                        <button data-reaction="Like">👍</button>
+                        <button data-reaction="Love">❤️</button>
+                        <button data-reaction="Haha">😆</button>
+                        <button data-reaction="Wow">😮</button>
+                        <button data-reaction="Sad">😢</button>
+                        <button data-reaction="Angry">😡</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <!-- Khu vực Bình luận -->
+    <section class="comments-section">
+        <h3><i class="fa-regular fa-comments"></i> Bình luận</h3>
+
+        <!-- Form nhập bình luận chính -->
+        <div class="comment-form-box">
+            <img src="{{ url_for('static', filename='avatar-mac-dinh-11.jpg') }}" class="avatar" alt="Avatar">
+            <form method="POST" action="{{ url_for('auth.add_comment', post_id=post.post_id) }}" class="comment-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <textarea name="content" placeholder="Bạn nghĩ gì về chủ đề này..." required rows="2"></textarea>
+                <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> Gửi</button>
+            </form>
+        </div>
+
+        <!-- Danh sách bình luận -->
+        <div id="comments" class="comments-list">
+            {% for comment_group in comments %}
+            <div class="comment-thread">
+                {% for comment in comment_group %}
+                <div class="comment-item {% if comment['parent_comment_id'] %}is-reply{% endif %}" id="comment-{{ comment['comment_id'] }}">
+
+                    <div class="comment-avatar">
+                        <img src="{{ url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Avatar">
+                    </div>
+
+                    <div class="comment-main">
+                        <div class="comment-bubble">
+                            <div class="comment-header">
+                                <a href="{{ url_for('auth.personal_page', user_id=comment['user_id']) }}" class="author-name">{{ comment['author'] }}</a>
+                                <span class="comment-date">{{ comment['created_at'] }}</span>
+                            </div>
+                            <div class="comment-body">
+                                {{ comment['content'] | safe }}
+                            </div>
+                        </div>
+
+                        <!-- Thanh công cụ của bình luận -->
+                        <div class="comment-actions-bar">
+                            <!-- Nút Cảm xúc bình luận -->
+                            <div class="chooseReact comment-react-wrapper">
+                                <button id="comment-reaction-button-{{ comment['comment_id'] }}" class="btn-link {{ user_comment_reaction[comment['comment_id']] | lower }}">
+                                    {{ user_comment_reaction[comment['comment_id']] or 'Thích' }}
+                                </button>
+                                <div id="comment-reaction-list-{{ comment['comment_id'] }}" class="reaction-popup">
+                                    <button data-reaction="Like" data-comment-id="{{ comment['comment_id'] }}">👍</button>
+                                    <button data-reaction="Love" data-comment-id="{{ comment['comment_id'] }}">❤️</button>
+                                    <button data-reaction="Haha" data-comment-id="{{ comment['comment_id'] }}">😆</button>
+                                    <button data-reaction="Wow" data-comment-id="{{ comment['comment_id'] }}">😮</button>
+                                    <button data-reaction="Sad" data-comment-id="{{ comment['comment_id'] }}">😢</button>
+                                    <button data-reaction="Angry" data-comment-id="{{ comment['comment_id'] }}">😡</button>
+                                </div>
+                            </div>
+
+                            <span class="react-count-small">{{ comment['reaction_count'] }} <i class="fa-solid fa-heart text-danger" style="font-size:10px;"></i></span>
+
+                            <button class="btn-link" onclick="showReplyBox('{{ comment['comment_id'] }}')">Trả lời</button>
+
+                            {% if session['user_id'] == comment['user_id'] %}
+                                <button class="btn-link" onclick="showEditBox('{{ comment['comment_id'] }}')">Sửa</button>
+                                <button class="btn-link text-danger" onclick="showDeleteConfirmation('{{ comment['comment_id'] }}')">Xóa</button>
+                            {% endif %}
+                        </div>
+
+                        <!-- Các Form ẩn (Trả lời / Chỉnh sửa / Xóa) -->
+                        <div id="reply-box-{{ comment['comment_id'] }}" class="action-box" style="display:none;">
+                            <form method="POST" action="{{ url_for('auth.add_comment', post_id=post.post_id) }}" class="comment-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="parent_comment_id" value="{{ comment['comment_id'] }}">
+                                <textarea name="content" placeholder="Trả lời {{ comment['author'] }}..." required rows="2"></textarea>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary btn-sm">Đăng</button>
+                                    <button type="button" class="btn-cancel btn-sm" onclick="hideReplyBox('{{ comment['comment_id'] }}')">Hủy</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {% if session['user_id'] == comment['user_id'] %}
+                        <div id="edit-box-{{ comment['comment_id'] }}" class="action-box" style="display:none;">
+                            <form method="POST" action="{{ url_for('auth.update_comment', comment_id=comment['comment_id']) }}" class="comment-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <textarea name="content" required rows="2">{{ comment['content'] }}</textarea>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary btn-sm">Lưu</button>
+                                    <button type="button" class="btn-cancel btn-sm" onclick="hideEditBox('{{ comment['comment_id'] }}')">Hủy</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="delete-confirmation-{{ comment['comment_id'] }}" class="action-box delete-box" style="display:none;">
+                            <p>Bạn có chắc chắn muốn xóa bình luận này?</p>
+                            <div class="form-actions">
+                                <button class="btn-danger btn-sm" onclick="confirmDelete('{{ comment['comment_id'] }}')">Xác nhận xóa</button>
+                                <button class="btn-cancel btn-sm" onclick="hideDeleteConfirmation('{{ comment['comment_id'] }}')">Hủy</button>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="{{ url_for('auth.index') }}" class="btn-outline"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
+    </div>
+</div>
+
+<!-- ================= GIỮ NGUYÊN SCRIPT CỦA BẠN (Đã tinh chỉnh nhẹ id update) ================= -->
+<script>
+function showReplyBox(commentId) { document.getElementById('reply-box-' + commentId).style.display = 'block'; }
+function hideReplyBox(commentId) { document.getElementById('reply-box-' + commentId).style.display = 'none'; }
+function showEditBox(commentId) { document.getElementById('edit-box-' + commentId).style.display = 'block'; }
+function hideEditBox(commentId) { document.getElementById('edit-box-' + commentId).style.display = 'none'; }
+function showDeleteConfirmation(commentId) { document.getElementById('delete-confirmation-' + commentId).style.display = 'block'; }
+function hideDeleteConfirmation(commentId) { document.getElementById('delete-confirmation-' + commentId).style.display = 'none'; }
+
+function confirmDelete(commentId) {
+    if (commentId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/comment/${commentId}/delete`;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = "{{ csrf_token() }}";
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Xử lý Bài viết
+$('#reaction-list button').on('click', function() {
+    var reactionType = $(this).data('reaction');
+    $.post('{{ url_for('auth.react', post_id=post.post_id) }}', {
+        reaction_type: reactionType,
+        _csrf_token: "{{ csrf_token() }}"
+    })
+    .done(function(response) {
+        if (response.status === 'success') {
+            $('#reaction-button').html('<i class="fa-regular fa-thumbs-up"></i> ' + reactionType).attr('class', 'btn-react ' + reactionType.toLowerCase());
+            $('#post-reaction-count-text').text(response.reaction_count);
+        }
+    })
+    .fail(function(jqXHR) {
+        if (jqXHR.status === 401) { window.location.href = "{{ url_for('auth.login') }}"; }
+    });
+});
+
+// Xử lý Bình luận
+$('[id^=comment-reaction-list-] button').on('click', function() {
+    var reactionType = $(this).data('reaction');
+    var commentId = $(this).data('comment-id');
+
+    $.post('{{ url_for('auth.react_comment', post_id=post.post_id) }}', {
+        reaction_type: reactionType,
+        comment_id: commentId,
+        _csrf_token: "{{ csrf_token() }}"
+    })
+    .done(function(response) {
+        if (response.status === 'success') {
+            $('#comment-reaction-button-' + commentId).text(reactionType).attr('class', 'btn-link ' + reactionType.toLowerCase());
+            // Update số lượng (tìm thẻ span có class react-count-small gần nhất)
+            $('#comment-' + commentId).find('.react-count-small').first().html(response.reaction_count + ' <i class="fa-solid fa-heart text-danger" style="font-size:10px;"></i>');
+        } else if (response.status === 'error') { alert(response.message); }
+    })
+    .fail(function(jqXHR) {
+        if (jqXHR.status === 401) { window.location.href = "{{ url_for('auth.login') }}"; }
+    });
+});
+</script>
+{% endblock %}

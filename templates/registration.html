@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - ForumDev</title>
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+</head>
+<body class="auth-page">
+
+    <div class="auth-container">
+        <!-- Nửa bên trái: Banner -->
+        <div class="auth-banner banner-register">
+            <div class="banner-content">
+                <h2>Tham gia cộng đồng!</h2>
+                <p>Tạo tài khoản để mở khóa mọi tính năng, đặt câu hỏi và bình luận trên diễn đàn.</p>
+            </div>
+            <a href="/" class="back-home"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
+        </div>
+
+        <!-- Nửa bên phải: Form -->
+        <div class="auth-form-box">
+            <div class="form-header">
+                <div class="brand-logo"><i class="fa-solid fa-comments"></i> ForumDev</div>
+                <h1>Đăng ký tài khoản</h1>
+                <p>Điền thông tin dưới đây để trở thành thành viên</p>
+            </div>
+
+            {% if registration_success %}
+                <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ registration_success }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="input-group">
+                    <label for="username">Tên đăng nhập</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="username" name="username" required placeholder="Ví dụ: nguyenvan_a">
+                    </div>
+                    {% if username_error %}<span class="validation-message"><i class="fa-solid fa-circle-xmark"></i> {{ username_error }}</span>{% endif %}
+                </div>
+
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        <input type="email" id="email" name="email" required placeholder="email@example.com">
+                    </div>
+                    {% if email_error %}<span class="validation-message"><i class="fa-solid fa-circle-xmark"></i> {{ email_error }}</span>{% endif %}
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" required placeholder="Tạo mật khẩu an toàn">
+                        <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('password', this)"></i>
+                    </div>
+                    {% if password_error %}<span class="validation-message"><i class="fa-solid fa-circle-xmark"></i> {{ password_error }}</span>{% endif %}
+                </div>
+
+                <button type="submit" class="btn-auth">Đăng ký thành viên <i class="fa-solid fa-user-plus"></i></button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Đã có tài khoản? <a href="{{ url_for('auth.login') }}">Đăng nhập ngay</a></p>
+            </div>
+        </div>
+    </div>
+
+<script>
+    function togglePassword(inputId, icon) {
+        var input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+</script>
+</body>
+</html>

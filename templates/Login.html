@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - ForumDev</title>
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+</head>
+<body class="auth-page">
+
+    <div class="auth-container">
+        <!-- Nửa bên trái: Banner -->
+        <div class="auth-banner">
+            <div class="banner-content">
+                <h2>Chào mừng trở lại!</h2>
+                <p>Đăng nhập để kết nối, chia sẻ kiến thức và thảo luận cùng hàng ngàn thành viên khác.</p>
+            </div>
+            <a href="/" class="back-home"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
+        </div>
+
+        <!-- Nửa bên phải: Form -->
+        <div class="auth-form-box">
+            <div class="form-header">
+                <div class="brand-logo"><i class="fa-solid fa-comments"></i> ForumDev</div>
+                <h1>Đăng nhập</h1>
+                <p>Vui lòng nhập thông tin tài khoản của bạn</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert-container">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}"><i class="fa-solid fa-circle-exclamation"></i> {{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% if error %}
+                <div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</div>
+            {% endif %}
+
+            <form method="POST" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="input-group">
+                    <label for="username">Tên đăng nhập</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="username" name="username" required placeholder="Nhập tên tài khoản">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" required placeholder="••••••••">
+                        <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('password', this)"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-auth">Đăng nhập <i class="fa-solid fa-right-to-bracket"></i></button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Chưa có tài khoản? <a href="{{ url_for('auth.register') }}">Đăng ký ngay</a></p>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // JS Ẩn/Hiện mật khẩu bằng Icon
+    function togglePassword(inputId, icon) {
+        var input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+</script>
+</body>
+</html>

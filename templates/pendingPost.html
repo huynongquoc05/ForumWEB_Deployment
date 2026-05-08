@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='postdetail.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="postView">
+    <h2>{{ post.title }}</h2>
+    <p><strong>Tác giả:</strong> <a href="{{ url_for('auth.personal_page', user_id=post[5]) }}">{{ post.username }}</a></p>
+    <p><strong>Ngày tạo:</strong> {{ post.created_at.strftime('%d/%m/%Y') }}</p>
+    <p><strong>Trạng thái:</strong> {{ post.status }}</p>
+    <div class="postContent">
+        <p>{{ post.content | safe }}</p>
+    </div>
+
+    <div class="actions">
+        {% if session.get('role') == 'admin' %}
+            <!-- Chỉ admin mới thấy nút Duyệt bài -->
+            <form action="{{ url_for('auth.approve_post', post_id=post.post_id) }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit">Duyệt bài</button>
+            </form>
+        {% endif %}
+
+        {% if session.get('role') == 'admin' or post.user_id == session['user_id'] %}
+            <a href="{{ url_for('auth.update_post', post_id=post['post_id']) }}" class="btn">Chỉnh sửa</a>
+            <!-- Cả admin và tác giả đều có quyền xóa -->
+            <form action="{{ url_for('auth.delete_post', post_id=post.post_id) }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit">Xóa bài</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

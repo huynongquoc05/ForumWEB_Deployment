@@ -1,0 +1,240 @@
+/* ================= KHUNG CHÍNH (Container) ================= */
+.post-detail-container {
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+/* ================= BÀI VIẾT (Main Post) ================= */
+.main-post {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 30px;
+}
+
+.post-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.post-title {
+    font-size: 32px;
+    line-height: 1.3;
+    margin-bottom: 15px;
+    color: var(--text-main);
+}
+
+.post-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.author-name {
+    display: block;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--primary-color);
+}
+
+.post-date {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Các nút Edit / Delete của bài viết */
+.btn-icon {
+    font-size: 18px;
+    padding: 8px;
+    border-radius: 5px;
+    transition: background 0.2s;
+}
+.btn-icon:hover { background: var(--bg-color); }
+
+/* Nội dung bài viết */
+.post-content {
+    font-size: 17px;
+    line-height: 1.8;
+    color: #374151;
+    margin-bottom: 30px;
+}
+
+.post-content img {
+    max-width: 100%;
+    border-radius: 8px;
+    height: auto;
+}
+
+/* ================= REACTIONS (Cảm xúc bài viết & bình luận) ================= */
+.post-footer {
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
+.reaction-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.reaction-count { font-size: 15px; color: var(--text-muted); }
+
+/* Nút bấm Hover ra Emoji (Giống Facebook) */
+.chooseReact {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-react {
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px 15px;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+.btn-react:hover { background: var(--bg-color); }
+
+/* Hộp Popup Emoji */
+.reaction-popup {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    padding: 5px 10px;
+    white-space: nowrap;
+    z-index: 100;
+    margin-bottom: 10px;
+    animation: popUp 0.3s ease;
+}
+
+.chooseReact:hover .reaction-popup { display: block; } /* Hover để hiện */
+
+.reaction-popup button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 0 5px;
+}
+.reaction-popup button:hover { transform: scale(1.3); }
+
+@keyframes popUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ================= BÌNH LUẬN (Comments Section) ================= */
+.comments-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--shadow-sm);
+}
+
+.comments-section h3 { margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+
+/* Khung nhập bình luận */
+.comment-form-box {
+    display: flex; gap: 15px; margin-bottom: 30px;
+}
+
+.comment-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.comment-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+}
+.comment-form textarea:focus { border-color: var(--primary-color); }
+
+/* Giao diện 1 Bình luận (Bong bóng chat) */
+.comment-thread { margin-bottom: 20px; }
+
+.comment-item {
+    display: flex; gap: 12px; margin-bottom: 15px;
+}
+
+/* Thụt lề cho bình luận con (Thread/Reply) */
+.comment-item.is-reply {
+    margin-left: 50px;
+    position: relative;
+}
+.comment-item.is-reply::before {
+    content: ''; position: absolute; left: -30px; top: -15px; width: 20px; height: 35px;
+    border-left: 2px solid #e5e7eb; border-bottom: 2px solid #e5e7eb; border-bottom-left-radius: 10px;
+}
+
+.comment-avatar img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+
+.comment-main { flex: 1; }
+
+.comment-bubble {
+    background-color: var(--bg-color);
+    padding: 12px 16px;
+    border-radius: 18px;
+    display: inline-block;
+    min-width: 200px;
+}
+
+.comment-header { margin-bottom: 4px; display: flex; align-items: baseline; gap: 10px; }
+.comment-header .author-name { font-size: 14px; font-weight: 600; color: var(--text-main); }
+.comment-date { font-size: 12px; color: var(--text-muted); }
+
+.comment-body { font-size: 15px; color: #1f2937; line-height: 1.5; }
+
+/* Thanh tác vụ dưới bình luận (Thích, Phản hồi) */
+.comment-actions-bar {
+    display: flex; align-items: center; gap: 15px; margin-top: 4px; padding-left: 10px;
+}
+
+.btn-link {
+    background: none; border: none; font-size: 12px; font-weight: 600;
+    color: var(--text-muted); cursor: pointer; padding: 0;
+}
+.btn-link:hover { color: var(--primary-color); text-decoration: underline; }
+.react-count-small { font-size: 12px; color: var(--text-muted); }
+
+/* Hộp Edit / Reply ẩn */
+.action-box { margin-top: 10px; padding: 15px; background: #f9fafb; border-radius: 8px; border: 1px dashed #d1d5db; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; width: 100%; }
+.btn-sm { padding: 5px 12px; font-size: 13px; border-radius: 5px; cursor: pointer; border: none; }
+.btn-cancel { background: #e5e7eb; color: #374151; }
+.btn-cancel:hover { background: #d1d5db; }
+.btn-danger { background: #ef4444; color: white; }
+.btn-outline { border: 1px solid var(--primary-color); color: var(--primary-color); padding: 10px 20px; border-radius: 30px; display: inline-block;}
+.btn-outline:hover { background: var(--primary-color); color: white; }

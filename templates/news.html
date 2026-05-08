@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Tin tức - ForumDev{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{% endblock %}
+
+{% block content %}
+    <!-- Tiêu đề trang -->
+    <div class="page-header">
+        <h1><i class="fa-solid fa-newspaper text-blue"></i> Tin tức cập nhật</h1>
+        <p>Theo dõi những thông tin, xu hướng công nghệ mới nhất từ diễn đàn.</p>
+    </div>
+
+    <!-- Danh sách bài viết dạng ngang -->
+    <div class="post-list">
+        {% for post in posts %}
+            <article class="post-card post-card-horizontal">
+                <!-- Ảnh đại diện -->
+                <div class="post-thumb">
+                    <!-- Nếu không có ảnh, dùng ảnh mặc định -->
+                    <img src="{{ post['thumbnail'] or url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Thumbnail">
+                    <span class="category-badge"><i class="fa-solid fa-bolt"></i> Tin tức</span>
+                </div>
+
+                <!-- Thông tin bài viết -->
+                <div class="post-info">
+                    <h2 class="post-title">
+                        <a href="{{ url_for('auth.view_post', post_id=post['post_id']) }}">
+                            {{ post['title'] }}
+                        </a>
+                    </h2>
+
+                    <!-- Dùng bộ lọc truncate để cắt ngắn đoạn văn nếu quá dài -->
+                    <p class="post-excerpt">
+                        {{ post['content'] | truncate(150) }}
+                    </p>
+
+                    <div class="post-meta">
+                        <span class="author"><i class="fa-solid fa-pen-nib"></i> {{ post['author'] }}</span>
+                        <span class="date"><i class="fa-regular fa-calendar-days"></i> {{ post['created_at'] }}</span>
+                    </div>
+                </div>
+            </article>
+        {% else %}
+            <!-- Giao diện khi không có bài viết nào -->
+            <div class="empty-state">
+                <i class="fa-solid fa-box-open"></i>
+                <h3>Chưa có bài viết nào</h3>
+                <p>Hiện tại chuyên mục tin tức đang trống.</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,49 @@
+<!-- footer.html -->
+<footer class="main-footer">
+    <div class="container footer-grid">
+
+        <!-- Cột 1: Thông tin thương hiệu -->
+        <div class="footer-col about-col">
+            <a href="/" class="footer-brand">
+                <i class="fa-solid fa-comments"></i> ForumDev
+            </a>
+            <p class="footer-desc">
+                Nơi giao lưu, chia sẻ kiến thức và giải đáp thắc mắc dành cho cộng đồng đam mê công nghệ. Cùng nhau học hỏi và phát triển!
+            </p>
+            <div class="social-links">
+                <a href="#" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#" title="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                <a href="#" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                <a href="#" title="Discord"><i class="fa-brands fa-discord"></i></a>
+            </div>
+        </div>
+
+        <!-- Cột 2: Liên kết nhanh -->
+        <div class="footer-col links-col">
+            <h3>Liên kết nhanh</h3>
+            <ul>
+                <li><a href="/"><i class="fa-solid fa-angle-right"></i> Trang chủ</a></li>
+                <li><a href="/news"><i class="fa-solid fa-angle-right"></i> Tin tức mới</a></li>
+                <li><a href="/faq"><i class="fa-solid fa-angle-right"></i> Hỏi đáp (FAQ)</a></li>
+                <li><a href="{{ url_for('auth.add_post') }}"><i class="fa-solid fa-angle-right"></i> Viết bài mới</a></li>
+            </ul>
+        </div>
+
+        <!-- Cột 3: Hỗ trợ & Chính sách -->
+        <div class="footer-col links-col">
+            <h3>Hỗ trợ</h3>
+            <ul>
+                <li><a href="/contact"><i class="fa-solid fa-angle-right"></i> Liên hệ với chúng tôi</a></li>
+                <li><a href="#"><i class="fa-solid fa-angle-right"></i> Điều khoản sử dụng</a></li>
+                <li><a href="#"><i class="fa-solid fa-angle-right"></i> Chính sách bảo mật</a></li>
+                <li><a href="#"><i class="fa-solid fa-angle-right"></i> Hướng dẫn đăng bài</a></li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Phần bản quyền dưới cùng -->
+    <div class="footer-bottom">
+        <p>&copy; 2024 ForumDev. Tất cả quyền được bảo lưu. Thiết kế với <i class="fa-solid fa-heart text-danger"></i> đam mê.</p>
+    </div>
+</footer>

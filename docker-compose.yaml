@@ -1,0 +1,67 @@
+
+
+services:
+  redis:
+    image: redis:latest
+#    container_name: cache_redis
+    networks:
+        - backend_network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+#    container_name: sql_server
+    container_name: forum_sql_server
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASS}
+    ports:
+      - 1433:1433
+    networks:
+        - backend_network
+    volumes:
+      - sql_data:/var/opt/mssql
+      - ./ForumWEB.sql:/ForumWEB.sql
+
+
+  nginx:
+    image: nginx:latest
+#    container_name: nginx_server
+    ports:
+      - "8005:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - web
+    networks:
+      - frontend_network
+
+
+
+  web:
+    build: .
+#    container_name: forum_flask_app
+#    ports:
+#      - "8005:8005"  comment lại
+    image: ghcr.io/huynongquoc05/forumweb_deployment:latest
+    environment:
+      - DB_SERVER=sqlserver
+      - DB_NAME=${DB_NAME}
+      - DB_USER=sa
+      - DB_PASSWORD=${DB_PASS}
+      - REDIS_HOST=redis
+    networks:
+        - backend_network
+        - frontend_network
+    depends_on:
+
+      - redis
+      - sqlserver
+
+networks:
+  frontend_network:
+    external: true
+  backend_network:
+    external: true
+
+volumes:
+  sql_data:

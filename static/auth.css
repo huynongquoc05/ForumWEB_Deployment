@@ -1,0 +1,174 @@
+/* ================= CƠ BẢN CHO TRANG AUTH ================= */
+.auth-page {
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+/* ================= KHUNG CHIA ĐÔI ================= */
+.auth-container {
+    display: flex;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    max-width: 1000px;
+    width: 100%;
+    min-height: 600px;
+}
+
+/* 1. Nửa Banner (Bên Trái) */
+.auth-banner {
+    flex: 1;
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    color: white;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+}
+
+.banner-register {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%); /* Màu xanh lá cho trang Đăng ký */
+}
+
+.banner-content h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.banner-content p {
+    font-size: 18px;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.back-home {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+.back-home:hover { opacity: 1; }
+
+/* 2. Nửa Form (Bên Phải) */
+.auth-form-box {
+    flex: 1;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #ffffff;
+}
+
+.form-header { margin-bottom: 30px; text-align: center; }
+
+.brand-logo { font-size: 24px; font-weight: bold; color: var(--primary-color); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+.form-header h1 { font-size: 28px; color: #1f2937; margin-bottom: 10px; }
+.form-header p { color: #6b7280; font-size: 15px; }
+
+/* ================= INPUTS & FORMS ================= */
+.auth-form { width: 100%; }
+
+.input-group { margin-bottom: 20px; }
+
+.input-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    color: #9ca3af;
+    font-size: 16px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 12px 40px; /* Chừa chỗ cho icon 2 bên */
+    font-size: 15px;
+    font-family: inherit;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.input-wrapper input:focus {
+    border-color: #2563eb;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Nút ẩn hiện mật khẩu */
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 5px;
+}
+.toggle-password:hover { color: #4b5563; }
+
+/* Nút Submit */
+.btn-auth {
+    width: 100%;
+    background-color: #2563eb;
+    color: white;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.3s, transform 0.1s;
+    margin-top: 10px;
+}
+.btn-auth:hover { background-color: #1d4ed8; }
+.btn-auth:active { transform: scale(0.98); }
+
+/* Footer Form */
+.auth-footer { text-align: center; margin-top: 25px; font-size: 15px; color: #6b7280; }
+.auth-footer a { color: #2563eb; font-weight: 600; text-decoration: none; }
+.auth-footer a:hover { text-decoration: underline; }
+
+/* ================= THÔNG BÁO LỖI (ALERTS) ================= */
+.alert { padding: 12px 15px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.alert-error, .alert-danger { background-color: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+.alert-success { background-color: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0; }
+
+.validation-message { display: block; color: #ef4444; font-size: 13px; margin-top: 5px; }
+
+/* ================= RESPONSIVE ĐIỆN THOẠI ================= */
+@media (max-width: 768px) {
+    .auth-container { flex-direction: column; min-height: auto; }
+    .auth-banner { padding: 30px; display: none; /* Ẩn banner trên điện thoại cho gọn */ }
+    .auth-form-box { padding: 30px 20px; }
+}

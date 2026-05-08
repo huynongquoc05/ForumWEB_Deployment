@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Cập Nhật Bài Viết Thành Công{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Style4addPosts.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="overlay">
+    <div class="success-message">
+        <h2>Cập nhật bài viết thành công!</h2>
+        {% if status == 'pending' %}
+            <p>Bài viết của bạn đang chờ duyệt.</p>
+        {% elif status == 'approved' %}
+            <p>Bài viết của bạn đã được duyệt và công khai.</p>
+        {% endif %}
+        <p>Bạn muốn làm gì tiếp theo?</p>
+        <div class="success-actions">
+            <a href="{{ url_for('auth.index') }}" class="btn">Trở về trang chủ</a>
+            <a href="{{ url_for('auth.update_post', post_id=post_id) }}" class="btn">Chỉnh sửa lại bài viết</a>
+            <a href="{{ url_for('auth.add_post') }}" class="btn">Thêm bài viết mới</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

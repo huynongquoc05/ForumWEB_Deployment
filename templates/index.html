@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Trang chủ diễn đàn{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Banner chào mừng (Thay thế cho thẻ h1 cũ) -->
+<div class="welcome-banner">
+    <div class="banner-content">
+        <h1>Khám phá & Chia sẻ kiến thức</h1>
+        <p>Cộng đồng thảo luận chất lượng hàng đầu dành cho bạn.</p>
+        {% if session.username %}
+            <a href="{{ url_for('auth.add_post') }}" class="btn-gradient">
+                <i class="fa-solid fa-plus"></i> Tạo bài viết mới
+            </a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn-gradient">
+                <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập để đăng bài
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Section 1: Tin Tức (Thay cho thẻ ul, li cũ) -->
+<section class="post-section">
+    <div class="section-header">
+        <h2><i class="fa-solid fa-fire text-orange"></i> Tin tức mới nhất</h2>
+        <a href="/news" class="view-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="post-grid">
+        {% for post in recent_posts %}
+        <article class="post-card">
+            <div class="post-thumb">
+                <img src="{{ post.thumbnail or url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Thumbnail">
+                <span class="category-badge">{{ post.category }}</span>
+            </div>
+            <div class="post-info">
+                <h3 class="post-title">
+                    <a href="{{ url_for('auth.view_post', post_id=post.post_id) }}">{{ post.title }}</a>
+                </h3>
+                <p class="post-excerpt">{{ post.content | truncate(80) }}</p> <!-- Cắt ngắn nội dung -->
+                <div class="post-meta">
+                    <span class="author"><i class="fa-solid fa-user"></i> {{ post.author }}</span>
+                    <span class="date"><i class="fa-regular fa-clock"></i> {{ post.created_at.strftime('%d/%m/%Y') }}</span>
+                </div>
+            </div>
+        </article>
+        {% else %}
+            <p>Chưa có tin tức nào.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Section 2: Hỏi Đáp (Thay cho thẻ ul, li cũ) -->
+<section class="post-section">
+    <div class="section-header">
+        <h2><i class="fa-solid fa-comments text-blue"></i> Hỏi đáp mới nhất</h2>
+        <a href="/faq" class="view-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="post-grid">
+        {% for post in qa_posts %}
+        <article class="post-card">
+            <div class="post-thumb">
+                <img src="{{ post.thumbnail or url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Thumbnail">
+                <span class="category-badge">{{ post.category }}</span>
+            </div>
+            <div class="post-info">
+                <h3 class="post-title">
+                    <a href="{{ url_for('auth.view_post', post_id=post.post_id) }}">{{ post.title }}</a>
+                </h3>
+                <p class="post-excerpt">{{ post.content | truncate(80) }}</p> <!-- Cắt ngắn nội dung -->
+                <div class="post-meta">
+                    <span class="author"><i class="fa-solid fa-user"></i> {{ post.author }}</span>
+                    <span class="date"><i class="fa-regular fa-clock"></i> {{ post.created_at.strftime('%d/%m/%Y') }}</span>
+                </div>
+            </div>
+        </article>
+        {% else %}
+            <p>Chưa có bài hỏi đáp nào.</p>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,47 @@
+<header class="main-header">
+    <div class="header-container">
+        <!-- Logo / Brand -->
+        <a href="/" class="brand-logo">
+            <i class="fa-solid fa-comments"></i> ForumDev
+        </a>
+
+        <!-- Navigation -->
+        <nav class="main-nav">
+            <a href="/"><i class="fa-solid fa-house"></i> Trang chủ</a>
+            <a href="/faq"><i class="fa-solid fa-circle-question"></i> Hỏi đáp</a>
+            <a href="/news"><i class="fa-solid fa-newspaper"></i> Tin tức</a>
+            <a href="/contact"><i class="fa-solid fa-envelope"></i> Liên hệ</a>
+        </nav>
+
+        <!-- Search & Auth -->
+        <div class="header-actions">
+            <form action="{{ url_for('auth.search') }}" method="get" class="search-form">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" name="query" placeholder="Tìm kiếm..." required>
+            </form>
+
+            <div class="auth-section">
+                {% if session.username %}
+                    <div class="dropdown">
+                        <button class="dropdown-toggle">
+                            <img src="{{ url_for('static', filename='avatar-mac-dinh-11.jpg') }}" alt="Avatar" class="avatar-sm">
+                            <span>{{ session.username }}</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('auth.account_management', username=session['username']) }}"><i class="fa-solid fa-user-gear"></i> Quản lý tài khoản</a>
+                            <a href="{{ url_for('auth.personal_page', user_id=session['user_id']) }}"><i class="fa-solid fa-id-badge"></i> Trang cá nhân</a>
+                            <a href="{{ url_for('auth.add_post') }}"><i class="fa-solid fa-pen-to-square"></i> Thêm bài viết</a>
+                            <hr>
+                            <a href="{{ url_for('auth.logout') }}" class="text-danger"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn-primary">
+                        <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>
