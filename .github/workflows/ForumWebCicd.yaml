@@ -70,8 +70,11 @@ jobs:
         env:
           DB_PASS: ${{ secrets.DB_PASS }}
         run: docker exec forum_sql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$DB_PASS" -C -i /ForumWEB.sql
+
       - name: Kiểm tra trạng thái các Container
-        run: docker compose ps
+        run: |
+          docker compose -f Docker/docker-compose.yaml ps
+          docker compose -f Docker/monitoring-compose.yaml ps
 
       - name: Kiểm tra kết nối Web (Ping thử Nginx)
         run: curl -f http://localhost || exit 1
