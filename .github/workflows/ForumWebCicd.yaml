@@ -61,7 +61,7 @@ jobs:
       - name: Build và khởi chạy hệ thống bằng Docker Compose
         run: |
           docker compose up -d --build --scale web=2
-          docker compose -f monitoring.yaml up -d
+          docker compose -f monitoring-compose.yaml up -d
 
       - name: Chờ hệ thống khởi động (30 giây)
         run: sleep 30
