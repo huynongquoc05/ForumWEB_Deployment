@@ -12,10 +12,13 @@ def index():
     # Kiểm tra xem người dùng đã đăng nhập hay chưa
     if 'username' in session:
         username = session['username']
-        print(session)
+        # print("Người dùng đã đăng nhập:", username)
+        #ghi ip máy chủ và máy truy cập
+
 
         recent_posts = get_recent_posts(10,category_id=4)  # Lấy 10 bài viết mới nhất
         qa_posts = get_recent_posts(10, category_id=3)
+
         return render_template(
             'index.html',
             username=username, recent_posts=recent_posts,qa_posts=qa_posts)
@@ -23,7 +26,7 @@ def index():
 
     recent_posts = get_recent_posts(10,category_id=4)  # Lấy 10 bài viết mới nhất
     qa_posts = get_recent_posts(10, category_id=3)
-    print(qa_posts)
+    # print(qa_posts)
     session['next'] = request.url  # Lưu URL hiện tại
     return render_template('index.html', username=None, recent_posts=recent_posts,qa_posts=qa_posts)
 
@@ -50,7 +53,7 @@ def login():
             session['username'] = user[1]  # Lưu username vào session
             session['user_id'] = user[0]  # Lưu user_id vào session
             session['role'] = user[2]  # Lưu role vào session
-
+            print(f"{user[1]} đã đăng nhập với vai trò {user[2]}")
             # Kiểm tra URL trước đó trong session
             next_url = session.pop('next', None)  # Lấy URL đã lưu và xóa nó
             if next_url:
@@ -175,9 +178,10 @@ def view_post(post_id):
         return redirect(url_for('auth.index'))
 
     user_id = session.get('user_id')
+    # print(f"{session.get('username')} đang xem bài viết {post_id} ")
     comments = get_comments_by_post_id(post_id)
     reaction_count = get_post_reaction_count(post_id)
-    print(post['author_id'])
+    # print(post['author_id'])
     # Lấy phản ứng của người dùng cho bài viết
     user_comment_reaction = get_user_comment_reaction(post_id, user_id)
 
@@ -206,7 +210,7 @@ def add_comment(post_id):
 
     # Gọi hàm xử lý từ models.py
     add_comment_to_db(post_id, parent_comment_id, user_id, content)
-
+    print(f"Người dùng {session.get('username')} đã thêm bình luận cho bài viết {post_id}")
     flash('Bình luận đã được thêm.', 'success')
     return redirect(url_for('auth.view_post', post_id=post_id))
 

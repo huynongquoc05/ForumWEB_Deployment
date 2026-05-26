@@ -3,12 +3,14 @@ name: ForumWebCicd
 on:
   push:
     branches:
-       ["main", "master"]
-  pull_request:
-    branches:
-       ["main", "master"]
+      - main
+    paths-ignore:
+      - '**.md'         # Bỏ qua tất cả các file Markdown (bao gồm README.md)
+      - 'assets/**'     # Bỏ qua toàn bộ thay đổi trong thư mục assets
+      - 'images/**'     # Bỏ qua thư mục hình ảnh (nếu có)
+      - 'docs/**'       # Bỏ qua tài liệu dự án (nếu có)
 
-#job1: Check code
+# Job 1: Check code
 jobs:
   check_code:
     runs-on: ubuntu-latest
@@ -29,7 +31,7 @@ jobs:
       - name: Quét mã nguồn bằng Flake8
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-# Job 2: Build, test and push image to registry
+  # Job 2: Build, test and push image to registry
   build_test_and_push_image:
     needs: check_code
     runs-on: ubuntu-latest
@@ -42,12 +44,11 @@ jobs:
       - name: Kéo mã nguồn về máy chủ
         uses: actions/checkout@v4
 
-
       - name: Kiểm tra phiên bản Docker & Docker Compose
         run: |
           docker --version
           docker compose version
-          
+
       - name: Giải mã file bảo mật từ Base64
         run: echo "${{ secrets.ENV_B64 }}" | base64 --decode > .env
 
@@ -56,6 +57,7 @@ jobs:
           docker network create backend_network || true
           docker network create frontend_network || true
           docker network create monitoring_network || true
+
       - name: Build và khởi chạy hệ thống bằng Docker Compose
         run: |
           docker compose up -d --build --scale web=2
@@ -64,20 +66,15 @@ jobs:
       - name: Chờ hệ thống khởi động (30 giây)
         run: sleep 30
 
-
       - name: fill sql data
         env:
           DB_PASS: ${{ secrets.DB_PASS }}
-        # Truyền mật khẩu thẳng vào biến SQLCMDPASSWORD trong container qua cờ -e
-        # Xóa bỏ hoàn toàn cờ -P khỏi lệnh sqlcmd
         run: docker exec forum_sql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$DB_PASS" -C -i /ForumWEB.sql
       - name: Kiểm tra trạng thái các Container
         run: docker compose ps
 
-
-
       - name: Kiểm tra kết nối Web (Ping thử Nginx)
-        run: curl -f http://localhost:8005 || exit 1
+        run: curl -f http://localhost || exit 1
 
       - name: In ra Log của Flask App (để debug nếu cần)
         run: docker compose logs web

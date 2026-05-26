@@ -6,13 +6,13 @@ from flask_wtf import CSRFProtect
 from fix_pas import update_all_passwords
 
 def create_app():
-    update_all_passwords()
+    # update_all_passwords()
     app = Flask(__name__)
     from models import cache
     app.cache = cache
 
     # Cấu hình ứng dụng
-    app.secret_key = 'your_secret_key'
+    app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your_secret_key_here')
     app.config['DEBUG'] = True
     app.config['PROPAGATE_EXCEPTIONS'] = True
     app.config['UPLOAD_FOLDER'] = 'static/uploads'

@@ -2,4 +2,17 @@
 .idea/
 __pycache__/
 *.pyc
+.env/k8s.env
+
 .env
+venv/
+
+*.json
+temp_audio
+uploads
+notuse
+credentials.json
+hello.yaml
+host.ini
+deploy_docker_compose.sh
+k8s.env
