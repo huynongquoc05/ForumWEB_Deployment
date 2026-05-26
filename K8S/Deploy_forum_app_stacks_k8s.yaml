@@ -89,7 +89,7 @@ spec:
             - name: sql-data
               mountPath: /var/opt/mssql
             - name: sql-script-volume
-              mountPath: /ForumWEB.sql # Mount file script vào thư mục gốc của container
+              mountPath: ./ForumWEB.sql # Mount file script vào thư mục gốc của container
               subPath: ForumWEB.sql
       volumes:
         - name: sql-data

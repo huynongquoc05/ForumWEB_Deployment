@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-
+cd "$(dirname "$0")"
 # --- ĐỊNH NGHĨA MÀU SẮC ---
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -59,9 +59,9 @@ echo -e "${YELLOW}▶ Running:${NC} ${GREEN}kubectl delete/create configmap & se
 echo -e "  Tạo ConfigMap và Secret cho Database"
 
 run kubectl delete configmap forum-sql-script --ignore-not-found
-run kubectl create configmap forum-sql-script --from-file=ForumWEB.sql
+run kubectl create configmap forum-sql-script --from-file=../ForumWEB.sql
 run kubectl delete secret forum-env-secret --ignore-not-found
-run kubectl create secret generic forum-env-secret --from-env-file=./.env
+run kubectl create secret generic forum-env-secret --from-env-file=../.env
 
 # 3. Triển khai ứng dụng
 run_desc "Triển khai Flask, Redis, SQL Server" \
@@ -97,7 +97,7 @@ run_desc "Cài Metrics Server" \
 sleep 3
 
 run_desc "Patch Metrics Server cho phép insecure TLS" \
-    kubectl patch deployment metrics-server -n kube-system --type=json --patch-file patch.json
+    kubectl patch deployment metrics-server -n kube-system --type=json --patch-file ../patch.json
 
 # 8. Cài Kube-Prometheus-Stack
 echo -e "\n${CYAN}----------------------------------------------------------------------${NC}"

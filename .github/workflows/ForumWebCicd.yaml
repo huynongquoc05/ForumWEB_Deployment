@@ -60,8 +60,8 @@ jobs:
 
       - name: Build và khởi chạy hệ thống bằng Docker Compose
         run: |
-          docker compose up -d --build --scale web=2
-          docker compose -f monitoring-compose.yaml up -d
+          docker compose --env-file ./.env -f Docker/docker-compose.yaml up -d --build --scale web=2
+          docker compose -f Docker/monitoring-compose.yaml up -d
 
       - name: Chờ hệ thống khởi động (30 giây)
         run: sleep 30
@@ -116,8 +116,3 @@ jobs:
 #            curl -f http://localhost:8005 || exit 1
 ##
 ##
-
-
-
-
-

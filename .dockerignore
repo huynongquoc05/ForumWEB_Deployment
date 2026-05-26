@@ -14,5 +14,5 @@ notuse
 credentials.json
 hello.yaml
 host.ini
-deploy_docker_compose.sh
-k8s.env
+Docker/deploy_docker_compose.sh
+K8S/k8s.env
