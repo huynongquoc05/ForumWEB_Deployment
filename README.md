@@ -1,8 +1,9 @@
 
 
 ## 📌 Mục lục
-- [1. Tổng quan về dự án ForumWeb](#1-tổng-quan-về-dự-án-forumweb---devops--deployment)
-- [2. 🚀 Quick Start (Khởi động nhanh)](#2--quick-start-khởi-động-nhanh)
+
+- [1. 🚀 Quick Start (Khởi động nhanh)](#1--quick-start-khởi-động-nhanh)
+- [2. Tổng quan về dự án ForumWeb](#2-tổng-quan-về-dự-án-forumweb---devops--deployment)
 - [3. Triển khai với Docker Compose](#3-triển-khai-với-docker-compose)
 - [4. Triển khai với Kubernetes (K8s)](#4-triển-khai-với-kubernetes-k8s)
 - [5. Kiểm thử chịu tải và phản ứng của HPA](#5-kiểm-thử-chịu-tải-và-phản-ứng-của-hpa)
@@ -10,12 +11,7 @@
 
 <br>
 
-# 1. Tổng quan về dự án ForumWeb - Deployment 
-Repo này chứa phần application và toàn bộ cấu hình deploy cho project ForumWeb. Ứng dụng chính là một forum viết bằng Flask, còn phần trọng tâm của repo nằm ở việc containerize service, setup CI/CD, chạy multi-container bằng Docker Compose và triển khai thử nghiệm trên Kubernetes.
-<img width="1528" height="839" alt="image" src="https://github.com/user-attachments/assets/878430d5-df7d-4027-ad06-913943a7747d" />
-
-<br><br><br>
-# 2. 🚀 Quick Start (Khởi động nhanh)
+# 1. 🚀 Quick Start (Khởi động nhanh)
 
 > ⚠️ **LƯU Ý QUAN TRỌNG:** Trước khi thực hiện bất kỳ lệnh khởi chạy nào bên dưới, bạn **bắt buộc** phải tạo và cấu hình đầy đủ các thông tin trong file `.env` ở thư mục gốc để hệ thống có thể inject cấu hình vào các container thành công. Chi tiết các biến vui lòng xem tại mục [Environment Variables](#environment-variables).
 
@@ -39,23 +35,6 @@ chmod +x K8S/Deploy_k8s.sh
 
 ```
 
----
-
-## Tech Stack
-
-| Category | Tools |
-| --- | --- |
-| Backend | Flask, Gunicorn |
-| Database | SQL Server 2019 |
-| Cache | Redis |
-| Reverse Proxy | Nginx |
-| Containerization | Docker, Docker Compose |
-| Orchestration | Kubernetes (kind) |
-| Monitoring | Prometheus, Grafana |
-| CI/CD | GitHub Actions |
-| Load Testing | k6 |
-
----
 
 ## Environment Variables
 
@@ -73,6 +52,29 @@ DB_PASSWORD=YourStrongPassword123!
 FLASK_SECRET_KEY=supersecretkeyandhardtoguess
 
 ```
+
+
+<br><br><br>
+
+# 2. Tổng quan về dự án ForumWeb - Deployment 
+
+Repo này chứa phần application và toàn bộ cấu hình deploy cho project ForumWeb. Ứng dụng chính là một forum viết bằng Flask, còn phần trọng tâm của repo nằm ở việc containerize service, setup CI/CD, chạy multi-container bằng Docker Compose và triển khai thử nghiệm trên Kubernetes.
+<img width="1528" height="839" alt="image" src="https://github.com/user-attachments/assets/878430d5-df7d-4027-ad06-913943a7747d" />
+
+
+## Tech Stack
+
+| Category | Tools |
+| --- | --- |
+| Backend | Flask, Gunicorn |
+| Database | SQL Server 2019 |
+| Cache | Redis |
+| Reverse Proxy | Nginx |
+| Containerization | Docker, Docker Compose |
+| Orchestration | Kubernetes (kind) |
+| Monitoring | Prometheus, Grafana |
+| CI/CD | GitHub Actions |
+| Load Testing | k6 |
 
 
 <br><br><br>
