@@ -9,6 +9,7 @@ on:
       - 'assets/**'     # Bỏ qua toàn bộ thay đổi trong thư mục assets
       - 'images/**'     # Bỏ qua thư mục hình ảnh (nếu có)
       - 'docs/**'       # Bỏ qua tài liệu dự án (nếu có)
+      - 'patch.json'
 
 # Job 1: Check code
 jobs:
