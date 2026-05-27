@@ -16,3 +16,4 @@ hello.yaml
 host.ini
 Docker/deploy_docker_compose.sh
 K8S/k8s.env
+/K8S/k8s.env

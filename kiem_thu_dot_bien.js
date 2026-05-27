@@ -4,10 +4,10 @@ import { check, sleep } from 'k6';
 // 1. Cấu hình kịch bản chịu tải an toàn cho máy 8GB RAM
 export const options = {
   stages: [
-    { duration: '30s', target: 75 },  // Trong 30s đầu: Tăng từ từ lên 50 user
-    { duration: '1m', target: 300 },  // 1 phút tiếp theo: Tăng dần lên 200 user (Để Gunicorn có thời gian xoay vòng xử lý)
-    { duration: '30s', target: 300 }, // Giữ nguyên tải đỉnh 200 user trong 30s
-    { duration: '30s', target: 0 },   // Hạ nhiệt, giảm dần về 0 user
+    { duration: '30s', target: 75 },
+    { duration: '1m', target: 300 },
+    { duration: '30s', target: 300 },
+    { duration: '30s', target: 0 },
   ],
   thresholds: {
     http_req_failed: ['rate<0.01'],   // Vẫn giữ kỳ vọng lỗi < 1%
@@ -22,7 +22,7 @@ export default function () {
 //    sleep(Math.random() * 5);
 //  }
 
-  const url = 'http://flask-forum-service:8005/login';
+  const url = 'http://localhost/login';
 
   // ==========================================
   // BƯỚC 1: TRUY CẬP TRANG LOGIN ĐỂ LẤY TOKEN
