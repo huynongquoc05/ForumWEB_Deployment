@@ -53,7 +53,7 @@ spec:
     spec:
       containers:
         - name: flask-forum
-          image: cb5555/forumweb-web:latest
+          image: ghcr.io/huynongquoc05/forumweb_deployment:latest
           ports:
             - containerPort: 8005
           env:
