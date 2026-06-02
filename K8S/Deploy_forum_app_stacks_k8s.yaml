@@ -56,8 +56,11 @@ spec:
           image: ghcr.io/huynongquoc05/forumweb_deployment:latest
           ports:
             - containerPort: 8005
+          envFrom: # <--- BẬT BƠM MÔI TRƯỜNG TỰ ĐỘNG TẠI ĐÂY
+            - secretRef:
+                name: forum-env-secret # Tự bốc các biến DB_SERVER, DB_USER... ném vào container
           env:
-            - name: REDIS_HOST
+            - name: REDIS_HOST # Giữ biến này thủ công để ghi đè hoặc chỉ định rõ service nội bộ
               value: "redis"
           resources:
             requests:
@@ -65,14 +68,14 @@ spec:
               cpu: "100m"
             limits:
               memory: "300Mi"
-              cpu: "1000m" # Đã sửa từ 1000000m về 1 CPU Core thực tế
+              cpu: "1000m"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: flask-forum-service
 spec:
-  type: ClusterIP # Sử dụng ClusterIP để bảo mật nội bộ, traffic từ ngoài sẽ đi qua Ingress
+  type: ClusterIP
   selector:
     app: flask-forum
   ports:
@@ -91,7 +94,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - http: # Bỏ hoàn toàn thuộc tính 'host' để nhận mọi request chuyển tiếp từ External LB
+    - http:
         paths:
           - path: /
             pathType: Prefix
@@ -121,17 +124,17 @@ spec:
       resource:
         name: cpu
         target:
-          type: AverageValue  # Đã sửa thành định dạng đo lường giá trị tuyệt đối
-          averageValue: 150m  # Tự động nhân bản khi tải trung bình của Pod chạm mốc 150m
+          type: AverageValue
+          averageValue: 150m
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 60 # Chờ 1 phút ổn định sau khi tải giảm trước khi hạ cấp Pod
+      stabilizationWindowSeconds: 60
       policies:
         - type: Percent
           value: 100
-          periodSeconds: 15          # Thu hồi tài nguyên nhanh chóng
+          periodSeconds: 15
     scaleUp:
-      stabilizationWindowSeconds: 0  # Đẻ Pod ngay lập tức khi chịu tải lớn đột biến từ k6
+      stabilizationWindowSeconds: 0
       policies:
         - type: Percent
           value: 100
