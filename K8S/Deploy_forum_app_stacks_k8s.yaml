@@ -1,213 +1,6 @@
-##redis deployment + service
-#apiVersion: apps/v1
-#kind: Deployment
-#metadata:
-#  name: redis
-#spec:
-#  replicas: 1
-#  selector:
-#      matchLabels:
-#        app: redis
-#  template:
-#      metadata:
-#            labels:
-#                app: redis
-#      spec:
-#            containers:
-#              - image: redis:latest
-#                name: redis
-#                ports:
-#                  - containerPort: 6379
-#
-#
-#---
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: redis
-#spec:
-#  selector:
-#    app: redis
-#  ports:
-#    - protocol: TCP
-#      port: 6379
-#      targetPort: 6379
-#
-#---
-#
-## 1. Ổ cứng ảo (PVC) để lưu trữ data của SQL Server
-#apiVersion: v1
-#kind: PersistentVolumeClaim
-#metadata:
-#  name: sql-data-pvc
-#spec:
-#  accessModes:
-#    - ReadWriteOnce
-#  resources:
-#    requests:
-#      storage: 1Gi # Có thể tăng giảm tùy nhu cầu
-#
-#---
-## 2. Service để Flask App gọi được bằng tên "sqlserver"
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: sqlserver
-#spec:
-#  selector:
-#    app: sqlserver
-#  ports:
-#    - protocol: TCP
-#      port: 1433
-#      targetPort: 1433
-#
-#---
-## 3. Deployment chạy SQL Server 2019
-#apiVersion: apps/v1
-#kind: Deployment
-#metadata:
-#  name: sqlserver
-#spec:
-#  replicas: 1
-#  selector:
-#    matchLabels:
-#      app: sqlserver
-#  template:
-#    metadata:
-#      labels:
-#        app: sqlserver
-#    spec:
-#      containers:
-#        - name: sqlserver
-#          image: mcr.microsoft.com/mssql/server:2019-latest
-#          ports:
-#            - containerPort: 1433
-#          envFrom:
-#            - secretRef:
-#                name: forum-env-secret
-#          volumeMounts:
-#            - name: sql-data
-#              mountPath: /var/opt/mssql
-#            - name: sql-script-volume
-#              mountPath: ./ForumWEB.sql # Mount file script vào thư mục gốc của container
-#              subPath: ForumWEB.sql
-#      volumes:
-#        - name: sql-data
-#          persistentVolumeClaim:
-#            claimName: sql-data-pvc
-#        - name: sql-script-volume
-#          configMap:
-#            name: forum-sql-script
-#
-#
-#
-#---
-#apiVersion: apps/v1
-#kind: Deployment
-#metadata:
-#  name: flask-forum
-#spec:
-#  replicas: 4
-#  selector:
-#    matchLabels:
-#      app: flask-forum
-#  template:
-#    metadata:
-#      labels:
-#        app: flask-forum
-#    spec:
-#      containers:
-#        - image: cb5555/forumweb-web:latest
-#          name: flask-forum
-#          ports:
-#           - containerPort: 8005
-#          envFrom:
-#              - secretRef:
-#                  name: forum-env-secret
-#
-#          resources:
-#            requests:
-#              memory: "200Mi"
-#              cpu: "100m"
-#            limits:
-#              memory: "300Mi"
-#              cpu: "1000000m"
-#
-#---
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: flask-forum-service
-#spec:
-#  type: NodePort
-#  selector:
-#    app: flask-forum
-#  ports:
-#
-#    - protocol: TCP
-#      port: 8005
-#      targetPort: 8005
-#      nodePort: 30005
-#
-#
-#---
-#apiVersion: networking.k8s.io/v1
-#kind: Ingress
-#metadata:
-#  name: forum-ingress
-##  annotations:
-##    kubernetes.io/ingress.class: "nginx"
-#spec:
-#  ingressClassName: nginx
-#  rules:
-#    - host: localhost
-#      http:
-#        paths:
-#          - path: /  # <--- Có dấu gạch ngang đầu dòng để thể hiện đây là 1 phần tử của mảng
-#            pathType: Prefix
-#            backend:
-#              service:
-#                name: flask-forum-service
-#                port:
-#                  number: 8005
-#
-#
-#---
-##Khai báo hpa cho deployment flask-forum
-#apiVersion: autoscaling/v2
-#kind: HorizontalPodAutoscaler
-#metadata:
-#  name: flask-forum-hpa
-#spec:
-#  scaleTargetRef:
-#    apiVersion: apps/v1
-#    kind: Deployment
-#    name: flask-forum
-#  minReplicas: 4
-#  maxReplicas: 10
-#  metrics:
-#    # LOẠI BỎ HOÀN TOÀN RAM. CHỈ DÙNG CPU!
-#    - type: Resource
-#      resource:
-#        name: cpu
-#        target:
-#          type: Utilization
-#          averageUtilization: 150  # Kích hoạt đẻ Pod khi CPU trung bình chạm mốc 150m
-#
-#  behavior:
-#    scaleDown:
-#      stabilizationWindowSeconds: 60 # 1 phút sau khi k6 ngừng bắn (CPU rớt về 1m), HPA sẽ hành động
-#      policies:
-#        - type: Percent
-#          value: 100
-#          periodSeconds: 15          # Trảm sạch Pod dư thừa nhanh chóng
-#    scaleUp:
-#      stabilizationWindowSeconds: 0  # Đẻ ngay lập tức khi CPU vọt lên để cứu server
-#      policies:
-#        - type: Percent
-#          value: 100
-#          periodSeconds: 15
-
+# ======================================================================
+# 1. REDIS STACK (DEPLOYMENT + SERVICE)
+# ======================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -215,20 +8,18 @@ metadata:
 spec:
   replicas: 1
   selector:
-      matchLabels:
-        app: redis
+    matchLabels:
+      app: redis
   template:
-      metadata:
-            labels:
-                app: redis
-      spec:
-            containers:
-              - image: redis:latest
-                name: redis
-                ports:
-                  - containerPort: 6379
-
-
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
 ---
 apiVersion: v1
 kind: Service
@@ -242,8 +33,10 @@ spec:
       port: 6379
       targetPort: 6379
 
-
 ---
+# ======================================================================
+# 2. FLASK FORUM APP STACK (DEPLOYMENT + SERVICE)
+# ======================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -259,53 +52,48 @@ spec:
         app: flask-forum
     spec:
       containers:
-        - image: cb5555/forumweb-web:latest
-          name: flask-forum
+        - name: flask-forum
+          image: cb5555/forumweb-web:latest
           ports:
-           - containerPort: 8005
+            - containerPort: 8005
           env:
             - name: REDIS_HOST
               value: "redis"
-
           resources:
             requests:
               memory: "200Mi"
               cpu: "100m"
             limits:
               memory: "300Mi"
-              cpu: "1000000m"
-
+              cpu: "1000m" # Đã sửa từ 1000000m về 1 CPU Core thực tế
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: flask-forum-service
 spec:
-  type: NodePort
+  type: ClusterIP # Sử dụng ClusterIP để bảo mật nội bộ, traffic từ ngoài sẽ đi qua Ingress
   selector:
     app: flask-forum
   ports:
-
     - protocol: TCP
       port: 8005
       targetPort: 8005
-      nodePort: 30005
-
 
 ---
+# ======================================================================
+# 3. INGRESS ROUTING (CATCH-ALL FOR EXTERNAL LB)
+# ======================================================================
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: forum-ingress
-#  annotations:
-#    kubernetes.io/ingress.class: "nginx"
 spec:
   ingressClassName: nginx
   rules:
-    - host: localhost
-      http:
+    - http: # Bỏ hoàn toàn thuộc tính 'host' để nhận mọi request chuyển tiếp từ External LB
         paths:
-          - path: /  # <--- Có dấu gạch ngang đầu dòng để thể hiện đây là 1 phần tử của mảng
+          - path: /
             pathType: Prefix
             backend:
               service:
@@ -313,9 +101,10 @@ spec:
                 port:
                   number: 8005
 
-
 ---
-#Khai báo hpa cho deployment flask-forum
+# ======================================================================
+# 4. HORIZONTAL POD AUTOSCALER (HPA)
+# ======================================================================
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -328,23 +117,21 @@ spec:
   minReplicas: 4
   maxReplicas: 10
   metrics:
-    # LOẠI BỎ HOÀN TOÀN RAM. CHỈ DÙNG CPU!
     - type: Resource
       resource:
         name: cpu
         target:
-          type: Utilization
-          averageUtilization: 150  # Kích hoạt đẻ Pod khi CPU trung bình chạm mốc 150m
-
+          type: AverageValue  # Đã sửa thành định dạng đo lường giá trị tuyệt đối
+          averageValue: 150m  # Tự động nhân bản khi tải trung bình của Pod chạm mốc 150m
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 60 # 1 phút sau khi k6 ngừng bắn (CPU rớt về 1m), HPA sẽ hành động
+      stabilizationWindowSeconds: 60 # Chờ 1 phút ổn định sau khi tải giảm trước khi hạ cấp Pod
       policies:
         - type: Percent
           value: 100
-          periodSeconds: 15          # Trảm sạch Pod dư thừa nhanh chóng
+          periodSeconds: 15          # Thu hồi tài nguyên nhanh chóng
     scaleUp:
-      stabilizationWindowSeconds: 0  # Đẻ ngay lập tức khi CPU vọt lên để cứu server
+      stabilizationWindowSeconds: 0  # Đẻ Pod ngay lập tức khi chịu tải lớn đột biến từ k6
       policies:
         - type: Percent
           value: 100

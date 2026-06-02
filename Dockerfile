@@ -1,28 +1,28 @@
-#FROM python:3.12-slim
-#WORKDIR /app
-## 3. Cài đặt các thư viện hệ thống cần thiết cho pyodbc và các package khác
-## Cài đặt công cụ và thêm kho lưu trữ của Microsoft để tải Driver SQL Server
-## 3. Cài đặt các thư viện hệ thống và Driver SQL Server (Đã cập nhật chuẩn Debian 12)
-#RUN apt-get update && apt-get install -y curl apt-transport-https gnupg2 \
-#    && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
-#    && curl -fsSL https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
-#    && apt-get update \
-#    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev \
-#    && rm -rf /var/lib/apt/lists/*
-#
-## copy file requirements.txt vào container
-#COPY requirements.txt .
-#
-## 4. Cài đặt các thư viện Python cần thiết
-#RUN pip install --no-cache-dir -r requirements.txt
-## copy toàn bộ mã nguồn vào container
-#COPY . .
-#
-#
-## 5. Chạy ứng dụng
-#
-## 7. Báo cho Docker biết ứng dụng sẽ chạy ở cổng 8005
-#EXPOSE 8005
+FROM python:3.12-slim
+WORKDIR /app
+# 3. Cài đặt các thư viện hệ thống cần thiết cho pyodbc và các package khác
+# Cài đặt công cụ và thêm kho lưu trữ của Microsoft để tải Driver SQL Server
+# 3. Cài đặt các thư viện hệ thống và Driver SQL Server (Đã cập nhật chuẩn Debian 12)
+RUN apt-get update && apt-get install -y curl apt-transport-https gnupg2 \
+    && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
+    && curl -fsSL https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# copy file requirements.txt vào container
+COPY requirements.txt .
+
+# 4. Cài đặt các thư viện Python cần thiết
+RUN pip install --no-cache-dir -r requirements.txt
+# copy toàn bộ mã nguồn vào container
+COPY . .
+
+
+# 5. Chạy ứng dụng
+
+# 7. Báo cho Docker biết ứng dụng sẽ chạy ở cổng 8005
+EXPOSE 8005
 
 
 # ==========================================
