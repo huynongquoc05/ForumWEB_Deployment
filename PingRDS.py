@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 connection_string = (
-    f"Driver={{ODBC Driver 17 for SQL Server}};"
+    f"Driver={{ODBC Driver 18 for SQL Server}};"
     f"Server={os.getenv('DB_SERVER')};"
     f"Database={os.getenv('DB_NAME')};"
     f"UID={os.getenv('DB_USER')};"

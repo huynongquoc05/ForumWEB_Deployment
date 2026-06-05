@@ -1,6 +1,4 @@
-# ======================================================================
-# 1. REDIS STACK (DEPLOYMENT + SERVICE)
-# ======================================================================
+#redis deployment + service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8,18 +6,20 @@ metadata:
 spec:
   replicas: 1
   selector:
-    matchLabels:
-      app: redis
-  template:
-    metadata:
-      labels:
+      matchLabels:
         app: redis
-    spec:
-      containers:
-        - name: redis
-          image: redis:latest
-          ports:
-            - containerPort: 6379
+  template:
+      metadata:
+            labels:
+                app: redis
+      spec:
+            containers:
+              - image: redis:latest
+                name: redis
+                ports:
+                  - containerPort: 6379
+
+
 ---
 apiVersion: v1
 kind: Service
@@ -33,10 +33,64 @@ spec:
       port: 6379
       targetPort: 6379
 
+
+
 ---
-# ======================================================================
-# 2. FLASK FORUM APP STACK (DEPLOYMENT + SERVICE)
-# ======================================================================
+# 2. Service để Flask App gọi được bằng tên "sqlserver"
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver
+spec:
+  selector:
+    app: sqlserver
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433
+
+---
+# 3. Deployment chạy SQL Server 2019
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sqlserver
+  template:
+    metadata:
+      labels:
+        app: sqlserver
+    spec:
+      containers:
+        - name: sqlserver
+          image: mcr.microsoft.com/mssql/server:2019-latest
+          ports:
+            - containerPort: 1433
+          envFrom:
+            - secretRef:
+                name: forum-env-secret
+          volumeMounts:
+            - name: sql-data
+              mountPath: /var/opt/mssql
+            - name: sql-script-volume
+              mountPath: /var/opt/mssql/scripts/ForumWEB.sql # <--- Đổi thành đường dẫn tuyệt đối
+              subPath: ForumWEB.sql
+      volumes:
+        - name: sql-data
+          hostPath: # <--- ĐỔI PVC THÀNH HOSTPATH
+            path: /mnt/sqlserver-data # Thư mục thật này sẽ tự đẻ ra trên ổ cứng máy Worker 2
+            type: DirectoryOrCreate
+        - name: sql-script-volume
+          configMap:
+            name: forum-sql-script
+
+
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,16 +106,14 @@ spec:
         app: flask-forum
     spec:
       containers:
-        - name: flask-forum
-          image: ghcr.io/huynongquoc05/forumweb_deployment:latest
+        - image: cb5555/forumweb-web:latest
+          name: flask-forum
           ports:
-            - containerPort: 8005
-          envFrom: # <--- BẬT BƠM MÔI TRƯỜNG TỰ ĐỘNG TẠI ĐÂY
-            - secretRef:
-                name: forum-env-secret # Tự bốc các biến DB_SERVER, DB_USER... ném vào container
-          env:
-            - name: REDIS_HOST # Giữ biến này thủ công để ghi đè hoặc chỉ định rõ service nội bộ
-              value: "redis"
+           - containerPort: 8005
+          envFrom:
+              - secretRef:
+                  name: forum-env-secret
+
           resources:
             requests:
               memory: "200Mi"
@@ -69,34 +121,37 @@ spec:
             limits:
               memory: "300Mi"
               cpu: "1000m"
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: flask-forum-service
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: flask-forum
   ports:
+
     - protocol: TCP
       port: 8005
       targetPort: 8005
+      nodePort: 30005
+
 
 ---
-# ======================================================================
-# 3. INGRESS ROUTING (CATCH-ALL FOR EXTERNAL LB)
-# ======================================================================
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: forum-ingress
+#  annotations:
+#    kubernetes.io/ingress.class: "nginx"
 spec:
   ingressClassName: nginx
   rules:
-    - http:
+      http:
         paths:
-          - path: /
+          - path: /  # <--- Có dấu gạch ngang đầu dòng để thể hiện đây là 1 phần tử của mảng
             pathType: Prefix
             backend:
               service:
@@ -104,10 +159,9 @@ spec:
                 port:
                   number: 8005
 
+
 ---
-# ======================================================================
-# 4. HORIZONTAL POD AUTOSCALER (HPA)
-# ======================================================================
+#Khai báo hpa cho deployment flask-forum
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -120,22 +174,25 @@ spec:
   minReplicas: 4
   maxReplicas: 10
   metrics:
+    # LOẠI BỎ HOÀN TOÀN RAM. CHỈ DÙNG CPU!
     - type: Resource
       resource:
         name: cpu
         target:
-          type: AverageValue
-          averageValue: 150m
+          type: Utilization
+          averageUtilization: 150  # Kích hoạt đẻ Pod khi CPU trung bình chạm mốc 150m
+
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 60
+      stabilizationWindowSeconds: 60 # 1 phút sau khi k6 ngừng bắn (CPU rớt về 1m), HPA sẽ hành động
       policies:
         - type: Percent
           value: 100
-          periodSeconds: 15
+          periodSeconds: 15          # Trảm sạch Pod dư thừa nhanh chóng
     scaleUp:
-      stabilizationWindowSeconds: 0
+      stabilizationWindowSeconds: 0  # Đẻ ngay lập tức khi CPU vọt lên để cứu server
       policies:
         - type: Percent
           value: 100
           periodSeconds: 15
+
