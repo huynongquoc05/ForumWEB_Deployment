@@ -69,8 +69,17 @@ Tách `frontend_network` và `backend_network`. Nginx chỉ thấy Flask, Flask 
 
 - Docker
 - kubectl, helm
-- File `.env` (xem `.env.example`)
-
+- File `.env` 
+```
+ACCEPT_EULA=Y
+MSSQL_SA_PASSWORD=YourStrongPassword123!
+REDIS_HOST=redis
+DB_SERVER=sqlserver
+DB_NAME=ForumWEB
+DB_USER=sa
+DB_PASSWORD=YourStrongPassword123!
+FLASK_SECRET_KEY=supersecretkeyandhardtoguess
+```
 ---
 
 ## Cách chạy
@@ -78,7 +87,6 @@ Tách `frontend_network` và `backend_network`. Nginx chỉ thấy Flask, Flask 
 ### Docker Compose (dev/test)
 
 ```bash
-cp .env.example .env  # điền các giá trị cần thiết
 chmod +x Docker/deploy_docker_compose.sh
 ./Docker/deploy_docker_compose.sh
 ```
