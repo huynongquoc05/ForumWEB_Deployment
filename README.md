@@ -94,18 +94,21 @@ chmod +x K8S/Deploy_k8s.sh
 ---
 
 ## Load test
-
-> ⚠️ Kết quả bên dưới được thực hiện trên môi trường kind (local). Trên cluster thật hiệu năng sẽ khác tùy cấu hình node.
-
-Chạy k6 với 300 virtual users — HPA scale từ 4 → 10 pods khi CPU vượt ngưỡng, scale down về 4 sau 60s khi traffic giảm. Toàn bộ request đều pass threshold.
-<img width="1012" height="190" alt="image" src="https://github.com/user-attachments/assets/72016497-2b21-4f60-8cc5-503fa2afc415" />
-
-<img width="1097" height="604" alt="image" src="https://github.com/user-attachments/assets/145a05fa-bd2e-4439-b022-c76e48a3956f" />
-
-
+ 
+> ⚠️ Thực hiện trên môi trường kind (local). Trên cluster thật hiệu năng sẽ khác tùy cấu hình node.
+ 
+Script `kiem_thu_dot_bien.js` dùng k6, tăng dần lên 300 VUs qua 4 stages. Mỗi VU thực hiện GET `/login` → parse CSRF token → POST đăng nhập. Bước lấy CSRF token là bắt buộc vì Flask bật CSRF protection — request thiếu token bị từ chối ngay.
+ 
+**Quan sát HPA trong quá trình test:**
+ 
+Idle bình thường mỗi pod chỉ dùng ~1m CPU. Khi k6 bắt đầu bắn tải, CPU trung bình tăng lên 402% rồi 683% — HPA scale từ 4 → 7 → 10 pods. `stabilizationWindowSeconds: 0` cho scale up nên pod mới được tạo gần như ngay lập tức, không chờ.
+ 
+Sau khi k6 ngừng, CPU rớt về thấp nhưng HPA giữ nguyên replica thêm 60s (window scale down) trước khi thu hồi pod thừa — tránh trường hợp traffic chỉ giảm tạm thời mà đã vội scale down rồi lại phải scale up lại.
+ 
+![HPA scale](https://github.com/user-attachments/assets/72016497-2b21-4f60-8cc5-503fa2afc415)
+![HPA scale](https://github.com/user-attachments/assets/145a05fa-bd2e-4439-b022-c76e48a3956f)
+ 
 ```
 http_req_duration: avg=576ms  p(90)=1.53s  p(95)=2.3s
 http_req_failed:   0.00%  (1 / 28763 requests)
 ```
-
-Script: `kiem_thu_dot_bien.js` — 4 stages, tăng dần lên 300 VUs, mỗi VU thực hiện GET `/login` → parse CSRF token → POST đăng nhập.
