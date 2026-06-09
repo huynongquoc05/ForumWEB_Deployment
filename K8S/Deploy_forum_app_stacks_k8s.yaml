@@ -1,4 +1,6 @@
-#redis deployment + service
+# ======================================================================
+# 1. REDIS STACK (DEPLOYMENT + SERVICE)
+# ======================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,20 +8,18 @@ metadata:
 spec:
   replicas: 1
   selector:
-      matchLabels:
-        app: redis
+    matchLabels:
+      app: redis
   template:
-      metadata:
-            labels:
-                app: redis
-      spec:
-            containers:
-              - image: redis:latest
-                name: redis
-                ports:
-                  - containerPort: 6379
-
-
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
 ---
 apiVersion: v1
 kind: Service
@@ -33,10 +33,10 @@ spec:
       port: 6379
       targetPort: 6379
 
-
-
 ---
-# 2. Service để Flask App gọi được bằng tên "sqlserver"
+# ======================================================================
+# 2. LOCAL SQL SERVER STACK (DEPLOYMENT + SERVICE) - SỬA LỖI HẠ TẦNG CLOUD
+# ======================================================================
 apiVersion: v1
 kind: Service
 metadata:
@@ -48,9 +48,8 @@ spec:
     - protocol: TCP
       port: 1433
       targetPort: 1433
-
 ---
-# 3. Deployment chạy SQL Server 2019
+# ... (phần trên giữ nguyên)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -65,6 +64,15 @@ spec:
       labels:
         app: sqlserver
     spec:
+      # --- BỔ SUNG ĐOẠN INIT CONTAINER NÀY ---
+      initContainers:
+        - name: fix-volume-permissions
+          image: busybox:latest
+          command: ["sh", "-c", "chown -R 10001:0 /var/opt/mssql"]
+          volumeMounts:
+            - name: sql-data
+              mountPath: /var/opt/mssql
+      # ----------------------------------------
       containers:
         - name: sqlserver
           image: mcr.microsoft.com/mssql/server:2019-latest
@@ -73,24 +81,32 @@ spec:
           envFrom:
             - secretRef:
                 name: forum-env-secret
+          resources: # Bổ sung giới hạn an toàn cho SQL nội bộ
+            requests:
+              memory: "1500Mi"
+              cpu: "500m"
+            limits:
+              memory: "2500Mi"
+              cpu: "1000m"
           volumeMounts:
             - name: sql-data
               mountPath: /var/opt/mssql
             - name: sql-script-volume
-              mountPath: /var/opt/mssql/scripts/ForumWEB.sql # <--- Đổi thành đường dẫn tuyệt đối
+              mountPath: /var/opt/mssql/scripts/ForumWEB.sql # Sửa thành đường dẫn tuyệt đối
               subPath: ForumWEB.sql
       volumes:
         - name: sql-data
-          hostPath: # <--- ĐỔI PVC THÀNH HOSTPATH
-            path: /mnt/sqlserver-data # Thư mục thật này sẽ tự đẻ ra trên ổ cứng máy Worker 2
+          hostPath: # Thay PVC bằng HostPath để lưu trực tiếp vào đĩa SSD của máy ảo Worker 2
+            path: /mnt/sqlserver-data
             type: DirectoryOrCreate
         - name: sql-script-volume
           configMap:
             name: forum-sql-script
 
-
-
 ---
+# ======================================================================
+# 3. FLASK FORUM APP STACK (DEPLOYMENT + SERVICE)
+# ======================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -109,11 +125,10 @@ spec:
         - image: cb5555/forumweb-web:latest
           name: flask-forum
           ports:
-           - containerPort: 8005
+            - containerPort: 8005
           envFrom:
-              - secretRef:
-                  name: forum-env-secret
-
+            - secretRef:
+                name: forum-env-secret
           resources:
             requests:
               memory: "200Mi"
@@ -121,37 +136,34 @@ spec:
             limits:
               memory: "300Mi"
               cpu: "1000m"
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: flask-forum-service
 spec:
-  type: NodePort
+  type: ClusterIP # Chuyển về ClusterIP để Ingress độc quyền gánh traffic, tăng bảo mật
   selector:
     app: flask-forum
   ports:
-
     - protocol: TCP
       port: 8005
       targetPort: 8005
-      nodePort: 30005
-
 
 ---
+# ======================================================================
+# 4. INGRESS ROUTING (CATCH-ALL FOR EXTERNAL LB) - SỬA LỖI CÚ PHÁP
+# ======================================================================
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: forum-ingress
-#  annotations:
-#    kubernetes.io/ingress.class: "nginx"
 spec:
   ingressClassName: nginx
   rules:
-      http:
+    - http: # Đã sửa lại cú pháp mảng và khoảng thụt dòng chuẩn quy định K8s
         paths:
-          - path: /  # <--- Có dấu gạch ngang đầu dòng để thể hiện đây là 1 phần tử của mảng
+          - path: /
             pathType: Prefix
             backend:
               service:
@@ -159,9 +171,10 @@ spec:
                 port:
                   number: 8005
 
-
 ---
-#Khai báo hpa cho deployment flask-forum
+# ======================================================================
+# 5. HORIZONTAL POD AUTOSCALER (HPA)
+# ======================================================================
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -174,25 +187,22 @@ spec:
   minReplicas: 4
   maxReplicas: 10
   metrics:
-    # LOẠI BỎ HOÀN TOÀN RAM. CHỈ DÙNG CPU!
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 150  # Kích hoạt đẻ Pod khi CPU trung bình chạm mốc 150m
-
+          averageUtilization: 150
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 60 # 1 phút sau khi k6 ngừng bắn (CPU rớt về 1m), HPA sẽ hành động
-      policies:
-        - type: Percent
-          value: 100
-          periodSeconds: 15          # Trảm sạch Pod dư thừa nhanh chóng
-    scaleUp:
-      stabilizationWindowSeconds: 0  # Đẻ ngay lập tức khi CPU vọt lên để cứu server
+      stabilizationWindowSeconds: 60
       policies:
         - type: Percent
           value: 100
           periodSeconds: 15
-
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15

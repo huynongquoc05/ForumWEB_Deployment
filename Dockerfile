@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y curl apt-transport-https gnupg2 \
     && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
     && curl -fsSL https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # copy file requirements.txt vào container
@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 2. Cài driver SQL Server (để lấy mã nguồn dev cho pyodbc)
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
     && curl -fsSL https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
-    && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18
+    && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17
 
 # 3. BÍ QUYẾT TẠO "CHIẾC HỘP ĐỰNG KIẾM": Tạo môi trường ảo (venv)
 # Chúng ta sẽ cài mọi thư viện Python vào cái hộp /opt/venv này để lát nữa dễ dàng bê đi
@@ -59,7 +59,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends curl gnupg2 \
     && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
     && curl -fsSL https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
-    && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
+    && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* # Xóa sạch bộ nhớ tạm của apt-get
 

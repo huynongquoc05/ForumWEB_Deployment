@@ -24,7 +24,7 @@ def get_db_connection():
 
     # 2. Sử dụng f-string để chèn các biến này vào chuỗi kết nối
     return pyodbc.connect(
-        'DRIVER={ODBC Driver 18 for SQL Server};'
+        'DRIVER={ODBC Driver 17 for SQL Server};'
         f'SERVER={db_server};'
         'DATABASE=ForumWebsite;'
         f'UID={db_user};'

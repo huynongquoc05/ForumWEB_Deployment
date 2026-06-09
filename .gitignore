@@ -17,3 +17,4 @@ K8S/k8s.env
 !/K8S/k8s.env
 
 !/K8S/k8s.env
+!/.env

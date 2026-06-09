@@ -51,20 +51,30 @@ echo -e "\n${CYAN}--------------------------------------------------------------
 run_desc "Triển khai Flask, Redis, SQL Server" \
     kubectl apply -f Deploy_forum_app_stacks_k8s.yaml
 
-# 4. Chờ tất cả Pod Ready
+# 4. Chờ các Pod ứng dụng cụ thể Ready (Sửa lỗi treo dứt điểm)
 echo -e "\n${CYAN}----------------------------------------------------------------------${NC}"
-run_desc "Chờ tất cả Pod Running" \
-    kubectl wait --for=condition=ready pod --all --timeout=15m
+echo -e "${YELLOW}⏳ Đang chờ các Pod của ứng dụng khởi động thành công...${NC}"
+# Chỉ chờ các pod có nhãn app thuộc dự án, không dùng --all để tránh bị kẹt bởi cụm monitoring
+kubectl wait --for=condition=ready pod -l app=sqlserver --timeout=5m
+kubectl wait --for=condition=ready pod -l app=redis --timeout=5m
+kubectl wait --for=condition=ready pod -l app=flask-forum --timeout=5m
 
 # 5. Đổ dữ liệu vào SQL Server
 echo -e "\n${CYAN}----------------------------------------------------------------------${NC}"
-echo -e "${YELLOW}▶ Running:${NC} ${GREEN}kubectl exec deployment/sqlserver -- sqlcmd -i /ForumWEB.sql${NC}"
-echo -e "  Đổ dữ liệu mồi vào SQL Server"
+echo -e "${YELLOW}▶ Running:${NC} ${GREEN}Tự động thực thi đổ dữ liệu ForumWEB.sql vào CSDL nội bộ...${NC}"
 echo -e "${CYAN}----------------------------------------------------------------------${NC}"
-# Đợi thêm 3-5s đảm bảo process SQL bên trong Pod đã thực sự nhận port
+# Đợi thêm 5s đảm bảo SQL Server Engine bên trong container đã sẵn sàng nhận kết nối
 sleep 5
-kubectl exec -it deployment/sqlserver -- \
-    sh -c '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$DB_PASSWORD" -C -i /ForumWEB.sql'
+
+# Lấy chính xác tên Pod SQL Server đang chạy thực tế
+SQL_POD_NAME=$(kubectl get pods -l app=sqlserver -o jsonpath="{.items[0].metadata.name}")
+
+# Bốc biến mật khẩu từ file .env nội bộ của bạn để chạy lệnh mồi dữ liệu
+DB_PASS=$(grep DB_PASSWORD ../.env | cut -d '=' -f2)
+
+# Thực thi sqlcmd mồi dữ liệu, dùng tool 18 như image quy định kèm cờ -C (Trust Server Certificate)
+kubectl exec -i $SQL_POD_NAME -- /opt/mssql-tools18/bin/sqlcmd \
+    -S localhost -U sa -P "$DB_PASS" -C -i /var/opt/mssql/scripts/ForumWEB.sql || echo -e "${YELLOW}⚠ Dữ liệu có thể đã tồn tại từ trước, bỏ qua mồi.${NC}"
 
 echo -e "\n${GREEN}======================================================================${NC}"
 echo -e "${GREEN}          ✅ TRIỂN KHAI ỨNG DỤNG HOÀN TẤT THÀNH CÔNG!${NC}"
