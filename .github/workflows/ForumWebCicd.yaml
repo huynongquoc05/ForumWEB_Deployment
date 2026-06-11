@@ -78,11 +78,22 @@ jobs:
           docker compose -f Docker/monitoring-compose.yaml ps
 
       - name: Kiểm tra kết nối Web (Ping thử Nginx)
-        run: curl -f http://localhost || exit 1
+        run: |
+          curl -f http://localhost || { 
+            echo "❌ Kết nối thất bại! Đang kéo log để debug..."; 
+            docker compose -f Docker/docker-compose.yaml logs web; 
+            docker compose -f Docker/docker-compose.yaml logs nginx; 
+            exit 1; 
+          }
 
       - name: kiểm tra k nối ến metrics
-        run: curl -f http://localhost/metrics || exit 1
-
+        run: |
+          curl -f http://localhost/metrics || { 
+            echo "❌ Không kết nối được metrics! Đang kéo log..."; 
+            docker compose -f Docker/docker-compose.yaml logs web; 
+            docker compose -f Docker/docker-compose.yaml logs nginx; 
+            exit 1; 
+          }
       - name: In ra Log của Flask App (để debug nếu cần)
         # Phải trỏ đúng file chứa service 'web'
         run: docker compose -f Docker/docker-compose.yaml logs web
@@ -98,6 +109,7 @@ jobs:
         run: docker push ghcr.io/huynongquoc05/forumweb_deployment:latest
 
       - name: Dọn dẹp (Tắt container)
+        if: ALWAYS()
         run: |
           docker compose -f Docker/docker-compose.yaml down
           docker compose -f Docker/monitoring-compose.yaml down

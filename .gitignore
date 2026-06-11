@@ -12,10 +12,10 @@ credentials.json
 hello.yaml
 host.ini
 
-./K8S/k8s.env
-./.env
-./PingRDS.py
-./logFailSqL.txt
-./fix_pas.py
-./selectUsers.py
-
+# Bỏ hoàn toàn dấu chấm (.) ở đầu các dòng dưới đây
+/K8S/k8s.env
+/.env
+/PingRDS.py
+/logFailSqL.txt
+/fix_pas.py
+/selectUsers.py
