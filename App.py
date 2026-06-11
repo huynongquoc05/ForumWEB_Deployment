@@ -3,7 +3,7 @@ import os
 import redis
 from flask import Flask
 from flask_wtf import CSRFProtect
-from fix_pas import update_all_passwords
+# from fix_pas import update_all_passwords
 
 def create_app():
     # update_all_passwords()
