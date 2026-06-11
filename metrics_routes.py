@@ -56,7 +56,8 @@ def record_metrics(response):
         method=method,
         endpoint=endpoint
     ).dec()
-
+    if request.endpoint == "metrics.metrics":
+        return response
     return response
 
 
