@@ -24,5 +24,7 @@ def create_app():
     # Import và đăng ký các route từ các blueprint
     from auth_routes import auth
     app.register_blueprint(auth)
+    from metrics_routes import metrics_bp
+    app.register_blueprint(metrics_bp)
 
     return app

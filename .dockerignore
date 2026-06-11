@@ -16,4 +16,9 @@ hello.yaml
 host.ini
 
 K8S/k8s.env
+fix_pas.py
+logFailSqL.txt
+PingRDS.py
+selectUsers.py
+
 

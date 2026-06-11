@@ -80,6 +80,9 @@ jobs:
       - name: Kiểm tra kết nối Web (Ping thử Nginx)
         run: curl -f http://localhost || exit 1
 
+      - name: kiểm tra k nối ến metrics
+        run: curl -f http://localhost/metrics || exit 1
+
       - name: In ra Log của Flask App (để debug nếu cần)
         # Phải trỏ đúng file chứa service 'web'
         run: docker compose -f Docker/docker-compose.yaml logs web

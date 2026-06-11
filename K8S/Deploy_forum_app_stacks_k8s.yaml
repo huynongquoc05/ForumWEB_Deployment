@@ -1,3 +1,4 @@
+ubuntu@ip-172-31-45-80:~/ForumWEB_Deployment/K8S$ cat Deploy_forum_app_stacks_k8s.yaml
 # ======================================================================
 # 1. REDIS STACK (DEPLOYMENT + SERVICE)
 # ======================================================================
@@ -122,7 +123,7 @@ spec:
         app: flask-forum
     spec:
       containers:
-        - image: cb5555/forumweb-web:latest
+        - image: ghcr.io/huynongquoc05/forumweb_deployment:latest
           name: flask-forum
           ports:
             - containerPort: 8005
@@ -185,7 +186,7 @@ spec:
     kind: Deployment
     name: flask-forum
   minReplicas: 4
-  maxReplicas: 10
+  maxReplicas: 9
   metrics:
     - type: Resource
       resource:
