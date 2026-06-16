@@ -16,8 +16,8 @@ export const options = {
 
 // Danh sách các worker endpoint
 const WORKERS = [
-  'http://52.221.224.218:32728',
-  'http://52.221.193.64:32728',
+  'http://54.151.241.157:32728',
+  'http://18.143.75.142:32728',
 ];
 
 export default function () {

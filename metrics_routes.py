@@ -25,20 +25,25 @@ IN_PROGRESS = Gauge(
 
 @metrics_bp.before_app_request
 def start_timer():
-    request._start_time = time.time()
+    # NẾU LÀ ENDPOINT QUÉT METRICS THÌ THOÁT NGAY, KHÔNG LÀM GÌ CẢ
+    if request.endpoint == "metrics.metrics":
+        return
 
+    request._start_time = time.time()
     endpoint = request.endpoint or "unknown"
     method = request.method
-
     IN_PROGRESS.labels(method=method, endpoint=endpoint).inc()
 
 
 @metrics_bp.after_app_request
 def record_metrics(response):
+    # NẾU LÀ ENDPOINT QUÉT METRICS THÌ THOÁT NGAY, KHÔNG GHI METRIC
+    if request.endpoint == "metrics.metrics":
+        return response
+
     endpoint = request.endpoint or "unknown"
     method = request.method
     status = str(response.status_code)
-
     duration = time.time() - getattr(request, "_start_time", time.time())
 
     REQUEST_COUNT.labels(
@@ -56,8 +61,7 @@ def record_metrics(response):
         method=method,
         endpoint=endpoint
     ).dec()
-    if request.endpoint == "metrics.metrics":
-        return response
+
     return response
 
 

@@ -1,4 +1,4 @@
-ubuntu@ip-172-31-45-80:~/ForumWEB_Deployment/K8S$ cat Deploy_forum_app_stacks_k8s.yaml
+
 # ======================================================================
 # 1. REDIS STACK (DEPLOYMENT + SERVICE)
 # ======================================================================
@@ -142,12 +142,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: flask-forum-service
+  labels:
+    monitor: forum-svc
 spec:
   type: ClusterIP # Chuyển về ClusterIP để Ingress độc quyền gánh traffic, tăng bảo mật
   selector:
     app: flask-forum
   ports:
     - protocol: TCP
+      name: main
       port: 8005
       targetPort: 8005
 
@@ -207,3 +210,20 @@ spec:
         - type: Percent
           value: 100
           periodSeconds: 15
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: forum-sm
+  namespace: default
+  labels:
+     release: monitoring
+spec:
+  selector:
+    matchLabels:
+      monitor: forum-svc
+  endpoints:
+  - port: main
+    path: /metrics
+    interval: 15s
