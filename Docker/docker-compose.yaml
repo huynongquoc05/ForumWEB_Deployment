@@ -63,9 +63,13 @@ services:
         - backend_network
         - frontend_network
     volumes:
+
+#      - ..:/app
       - ../static:/app/static
-#      - ./App.py:/app/App.py
-#      - ./auth_routes.py:/app/auth_routes.py
+      - ../db_helper.py:/app/db_helper.py
+      - ../auth_routes.py:/app/auth_routes.py
+#      - ../cache.py:/app/cache.py
+
 
     depends_on:
 

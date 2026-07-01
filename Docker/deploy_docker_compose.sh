@@ -22,7 +22,7 @@ run docker network create backend_network || true
 run docker network create frontend_network || true
 run docker network create monitoring_network || true
 
-run docker compose --env-file ../.env -f docker-compose.yaml up -d --scale web=2
+run docker compose --env-file ../.env -f docker-compose.yaml up -d --scale web=5
 run docker compose -f monitoring-compose.yaml up -d
 
 echo -e "${CYAN}⏳ Đang chờ SQL Server đạt trạng thái Healthy...${NC}"

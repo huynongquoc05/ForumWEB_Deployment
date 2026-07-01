@@ -1,0 +1,26 @@
+alertmanager:
+  config:
+    global:
+      # Cấu hình máy chủ gửi thư của Google
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'email-cua-ban@gmail.com'
+      smtp_auth_username: 'email-cua-ban@gmail.com'
+      # Dán cái Mật khẩu ứng dụng 16 ký tự vào đây
+      smtp_auth_password: 'matkhauungdungcuaban'
+      smtp_require_tls: true
+
+    route:
+      # Gom nhóm các cảnh báo giống nhau
+      group_by: ['alertname']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 1h
+      # Chỉ định mặc định sẽ gửi đi đâu
+      receiver: 'email-notifications'
+
+    receivers:
+    - name: 'email-notifications'
+      email_configs:
+      # Email người nhận (có thể là chính bạn hoặc email sếp)
+      - to: 'nguoi-nhan@gmail.com'
+        send_resolved: true # Gửi thêm 1 email báo "Đã sửa xong" khi lỗi kết thúc

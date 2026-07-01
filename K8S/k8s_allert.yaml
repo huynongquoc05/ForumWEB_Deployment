@@ -1,0 +1,49 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: alert-rules
+  namespace: default
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: node-and-pod-alerts
+      rules:
+        - alert: NodeNotReady
+          expr: kube_node_status_condition{condition="Ready", status="true"} ==0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Máy chủ K8s bị sập: {{ $labels.node }}"
+            description: "Node {{ $labels.node }} đã ở trạng thái NotReady hơn 2 phút."
+
+        - alert: PodCrashLooping
+          expr: rate(kube_pod_container_status_restarts_total[5m])*60 > 2
+          for: 5m
+          labels:
+              severity: warning
+          annotations:
+            summary: "Pod sap lien tuc: {{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} trong namespace {{ $labels.namespace }} đã restart hơn 2 lần trong 5 phút qua."
+
+        - alert: HighMemoryusage
+          expr: ((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes)/node_memory_MemTotal_bytes) *100 > 85
+          for: 5m
+          labels:
+                severity: warning
+          annotations:
+            summary: "Máy chủ sắp hết RAM: {{ $labels.instance }}"
+            description: "Node {{ $labels.instance }} đã sử dụng hơn 85% RAM liên tục trong 5 phút."
+
+        - alert: HighCPUUsage
+          expr: (1-avg by (instance) (irate(node_cpu_seconds_total{mode='idle'}[5m])))*100 > 90
+          for: 5m
+          labels:
+                severity: warning
+          annotations:
+            summary: "Máy chủ đang quá tải CPU: {{ $labels.instance }}"
+            description: "Node {{ $labels.instance }} đã sử dụng hơn 90% CPU liên tục trong 5 phút."
+
+
+---

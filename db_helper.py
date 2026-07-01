@@ -6,11 +6,16 @@ import hashlib
 import redis
 import os
 
+import json
+
 cache = redis.Redis(
     host=os.getenv('REDIS_HOST', 'localhost'),
     port=6379,
     db=0
 )
+
+
+
 
 # def get_db_connection():
 #     return pyodbc.connect('Server=DESKTOP-AMN3OI8;Database=ForumWebsite;Trusted_Connection=yes;DRIVER={SQL Server}')
@@ -31,6 +36,7 @@ def get_db_connection():
         f'PWD={db_password};'
         'TrustServerCertificate=yes;'
     )
+
 
 def hash_password(password):
     """Mã hóa mật khẩu bằng SHA-256."""
@@ -541,7 +547,7 @@ def get_comment_by_id(comment_id):
         return None
 
 
-# models.py
+# db_helper.py
 import pyodbc
 
 
@@ -912,3 +918,5 @@ def search_posts_by_keyword(keyword):
     cursor.close()
     conn.close()
     return posts
+
+

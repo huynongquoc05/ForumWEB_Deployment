@@ -8,7 +8,7 @@ from flask_wtf import CSRFProtect
 def create_app():
     # update_all_passwords()
     app = Flask(__name__)
-    from models import cache
+    from db_helper import cache
     app.cache = cache
 
     # Cấu hình ứng dụng

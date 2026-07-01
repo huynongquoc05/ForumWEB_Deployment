@@ -1,45 +1,51 @@
 import os
 
+import redis
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify, current_app, abort
 from werkzeug.utils import secure_filename
 
-from models import check_exists, SaveToDB, hash_password
-from models import get_post_by_id,get_recent_posts,get_comments_by_post_id,get_post_reaction_count
+from cache import get_cached_posts, get_cached_post_by_id
+from db_helper import check_exists, SaveToDB, hash_password, cache
+from db_helper import get_post_by_id,get_recent_posts,get_comments_by_post_id,get_post_reaction_count
 auth = Blueprint('auth', __name__)
 from flask import current_app
+from flask import session, render_template, request
+
+
 @auth.route('/')
 def index():
-    # Kiểm tra xem người dùng đã đăng nhập hay chưa
-    if 'username' in session:
-        username = session['username']
-        # print("Người dùng đã đăng nhập:", username)
-        #ghi ip máy chủ và máy truy cập
+    # Lấy username từ session (Luôn là real-time, không cache cái này)
+    username = session.get('username')
 
+    # Gọi dữ liệu qua hàm có cache (Thời gian sống mặc định 5 phút)
+    recent_posts = get_cached_posts(limit=10, category_id=4)
+    qa_posts = get_cached_posts(limit=10, category_id=3)
 
-        recent_posts = get_recent_posts(10,category_id=4)  # Lấy 10 bài viết mới nhất
-        qa_posts = get_recent_posts(10, category_id=3)
-
+    if username:
         return render_template(
             'index.html',
-            username=username, recent_posts=recent_posts,qa_posts=qa_posts)
+            username=username, recent_posts=recent_posts, qa_posts=qa_posts
+        )
 
+    session['next'] = request.url
+    return render_template(
+        'index.html',
+        username=None, recent_posts=recent_posts, qa_posts=qa_posts
+    )
 
-    recent_posts = get_recent_posts(10,category_id=4)  # Lấy 10 bài viết mới nhất
-    qa_posts = get_recent_posts(10, category_id=3)
-    # print(qa_posts)
-    session['next'] = request.url  # Lưu URL hiện tại
-    return render_template('index.html', username=None, recent_posts=recent_posts,qa_posts=qa_posts)
 
 @auth.route('/faq')
 def faq():
-    # Lấy tất cả bài viết thuộc chuyên mục Hỏi đáp (ví dụ với category_id=1)
-    faq_posts = get_recent_posts(limit=None, category_id=3)
+    # Trang FAQ lấy toàn bộ bài viết, dữ liệu này ít thay đổi nên có thể tăng TTL lên 1 tiếng (3600 giây)
+    faq_posts = get_cached_posts(limit=None, category_id=3, ttl=3600)
     return render_template('faq.html', posts=faq_posts)
+
+
 
 @auth.route('/news')
 def news():
-    # Lấy tất cả bài viết thuộc chuyên mục Tin tức (ví dụ với category_id=2)
-    news_posts = get_recent_posts(limit=None, category_id=4)
+    # Trang News lấy toàn bộ tin tức, cache 10 phút (600 giây) chẳng hạn
+    news_posts = get_cached_posts(limit=None, category_id=4, ttl=600)
     return render_template('news.html', posts=news_posts)
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -92,7 +98,7 @@ def logout():
 
 
 from flask import render_template, request, redirect, url_for, flash, session
-from models import get_categories, save_post
+from db_helper import get_categories, save_post
 
 
 def allowed_file(filename):
@@ -109,7 +115,7 @@ def add_post():
         title = request.form.get('title')
         category_id = request.form.get('category_id')
         content = request.form.get('content')
-        from models import parse_custom_syntax, add_paragraph_tags
+        from db_helper import parse_custom_syntax, add_paragraph_tags
         # Xử lý cú pháp tùy chỉnh và thêm thẻ <p>
         content = parse_custom_syntax(content)
         content = add_paragraph_tags(content)
@@ -138,7 +144,7 @@ def update_post(post_id):
     if 'user_id' not in session:
         flash('Bạn cần đăng nhập để cập nhật bài viết.')
         return redirect(url_for('auth.login'))
-    from models import parse_custom_syntax_reverse, parse_custom_syntax, save_updated_post,get_post_by_id0,add_paragraph_tags
+    from db_helper import parse_custom_syntax_reverse, parse_custom_syntax, save_updated_post,get_post_by_id0,add_paragraph_tags
     post = get_post_by_id0(post_id)
 
     if not post or post[4] != session['user_id']:
@@ -154,6 +160,13 @@ def update_post(post_id):
         content = parse_custom_syntax(content)
         content = add_paragraph_tags(content)
         save_updated_post(post_id, title, content, category_id)
+        # 🚨 LỆNH THÊM MỚI: Xóa ngay lập tức key cache của bài viết này để ép tải lại data mới
+        try:
+            cache.delete(f"post:detail:{post_id}")
+            # Đồng thời xóa luôn cache trang chủ/news của category đó nếu cần thiết
+            cache.delete(f"posts:cat_{category_id}:limit_10")
+        except redis.RedisError as e:
+            print(f"❌ Không thể invalidate cache sau khi update post: {e}")
 
         # Hiển thị thông báo cập nhật thành công
         return render_template('update_success.html', status=post[5],post_id=post_id)
@@ -171,8 +184,10 @@ def update_post(post_id):
     )
 @auth.route('/post/<int:post_id>')
 def view_post(post_id):
-    from models import get_user_comment_reaction
-    post = get_post_by_id(post_id)
+    from db_helper import get_user_comment_reaction
+    post = get_cached_post_by_id(post_id)
+    # print("day là code cua view_post, dang bindmount tu docker compose, khong dung cache")
+    # post = get_post_by_id(post_id)
     if post is None:
         flash('Bài viết không tồn tại hoặc chưa được phê duyệt.', 'error')
         return redirect(url_for('auth.index'))
@@ -203,12 +218,12 @@ def add_comment(post_id):
         print("bạn cần đănh nhập để bình luận")
 
         return redirect(url_for('auth.login'))  # Chuyển hướng sang trang đăng nhập
-    from models import add_comment_to_db
+    from db_helper import add_comment_to_db
     content = request.form.get('content')
     parent_comment_id = request.form.get('parent_comment_id', None)
     user_id = session['user_id']  # ID người dùng
 
-    # Gọi hàm xử lý từ models.py
+    # Gọi hàm xử lý từ db_helper.py
     add_comment_to_db(post_id, parent_comment_id, user_id, content)
     print(f"Người dùng {session.get('username')} đã thêm bình luận cho bài viết {post_id}")
     flash('Bình luận đã được thêm.', 'success')
@@ -223,7 +238,7 @@ def update_comment( comment_id):
 
     user_id = session['user_id']
     content = request.form.get('content')
-    from models import can_user_edit_comment,update_comment_in_db
+    from db_helper import can_user_edit_comment,update_comment_in_db
     # Kiểm tra quyền chỉnh sửa bình luận
     if not can_user_edit_comment(comment_id, user_id):
         flash('Bạn không có quyền chỉnh sửa bình luận này.', 'error')
@@ -247,7 +262,7 @@ def delete_comment(comment_id):
         return redirect(url_for('auth.login'))
 
     user_id = session['user_id']
-    from models import can_user_edit_comment, delete_comment_from_db
+    from db_helper import can_user_edit_comment, delete_comment_from_db
 
     # Kiểm tra quyền xóa bình luận
     if not can_user_edit_comment(comment_id, user_id):
@@ -268,7 +283,7 @@ def delete_comment(comment_id):
 
 @auth.route('/post/<int:post_id>/react', methods=['POST'])
 def react(post_id):
-    from models import handle_reaction
+    from db_helper import handle_reaction
 
     # Kiểm tra xem người dùng đã đăng nhập chưa
     if 'user_id' not in session:
@@ -277,7 +292,7 @@ def react(post_id):
     reaction_type = request.form.get('reaction_type')
     user_id = session['user_id']  # ID người dùng
 
-    # Gọi hàm xử lý từ models.py
+    # Gọi hàm xử lý từ db_helper.py
     reaction_count = handle_reaction(post_id, user_id, reaction_type)
 
     return jsonify({'status': 'success', 'reaction_count': reaction_count})
@@ -293,7 +308,7 @@ def react_comment(post_id):
     user_id = session['user_id']
     reaction_type = request.form.get('reaction_type')
     comment_id = request.form.get('comment_id')
-    from models import update_comment_reaction
+    from db_helper import update_comment_reaction
 
     # Cập nhật cảm xúc cho bình luận trong cơ sở dữ liệu
     reaction_count = update_comment_reaction(comment_id, user_id, reaction_type)
@@ -306,7 +321,7 @@ def react_comment(post_id):
 @auth.route('/PersonalPageUser/<int:user_id>')
 def personal_page(user_id):
     """Hiển thị trang cá nhân của người dùng."""
-    from models import get_user_info_and_posts
+    from db_helper import get_user_info_and_posts
     # Kiểm tra xem người dùng có phải là admin không
     is_admin = session.get('role')
     user_info, posts = get_user_info_and_posts(user_id, is_admin)
@@ -338,7 +353,7 @@ def account_management(username):
     if 'username' not in session or session['username'] != username:
         return redirect(url_for('auth.index'))
 
-    from models import get_user_info_and_posts, get_activity_history
+    from db_helper import get_user_info_and_posts, get_activity_history
 
     # Kiểm tra xem người dùng có phải là admin không
     is_admin = session.get('role')
@@ -366,7 +381,7 @@ def account_management(username):
 @auth.route('/approve_post/<int:post_id>', methods=['POST'])
 def approve_post(post_id):
     """Duyệt bài viết."""
-    from models import approve_post_in_db
+    from db_helper import approve_post_in_db
     approve_post_in_db(post_id)
     # Kiểm tra URL trước đó trong session
     next_url = session.pop('next', None)
@@ -376,7 +391,7 @@ def approve_post(post_id):
 @auth.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
     """Xóa bài viết."""
-    from models import delete_post_in_db
+    from db_helper import delete_post_in_db
     delete_post_in_db(post_id)
     # Kiểm tra URL trước đó trong session
     next_url = session.pop('next', None)
@@ -388,7 +403,7 @@ def delete_post(post_id):
 def view_pending_post(post_id):
     # Kiểm tra nếu người dùng không phải là admin
 
-    from models import get_pending_posts_byId
+    from db_helper import get_pending_posts_byId
     # Lấy thông tin bài viết
     post = get_pending_posts_byId(post_id)
     if not post:
@@ -407,7 +422,7 @@ def search():
     if not query:
         flash("Vui lòng nhập từ khóa để tìm kiếm.", 'error')
         return redirect(url_for('index'))
-    from models import search_posts_by_keyword,search_users_by_keyword
+    from db_helper import search_posts_by_keyword,search_users_by_keyword
     # Gọi hàm truy vấn dữ liệu từ CSDL
     users = search_users_by_keyword(query)
     posts = search_posts_by_keyword(query)
@@ -415,8 +430,10 @@ def search():
     return render_template('search.html', query=query, users=users, posts=posts)
 
 # Viết 1 route đếm số người truy cập trang web sử dụng Redis để lưu trữ số lượt truy cập
-@auth.route('/visit_count')
-def visit_count():
-    from models import cache
-    count = cache.incr('visit_count')
-    return f'Số lượt truy cập trang web: {count}'
+@auth.route('/db_metrics')
+def db_metrics():
+    # Lấy số lần gọi DB thật từ Redis
+    # Thêm .decode() nếu bạn không bật decode_responses=True khi khởi tạo Redis
+    db_calls = cache.get('real_db_call_count') or 0
+
+    return f"📊 THỐNG KÊ HỆ THỐNG:<br>Số lần thực sự phải chọc xuống SQL Server: <b>{db_calls}</b>"
