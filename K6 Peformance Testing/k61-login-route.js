@@ -60,9 +60,9 @@ import { check, sleep } from 'k6';
 
 export const options = {
   stages: [
-    { duration: '30s', target: 75 },
-    { duration: '1m', target: 350 },
-    { duration: '30s', target: 350 },
+    { duration: '30s', target: 160 },
+    { duration: '1m', target: 700 },
+    { duration: '30s', target: 700 },
     { duration: '30s', target: 0 },
   ],
   thresholds: {
@@ -72,7 +72,7 @@ export const options = {
 };
 
 // Load Balancer Nginx endpoint
-const BASE_URL = 'http://localhost';
+const BASE_URL = 'http://main-lb-e8cc1b383fccfadd.elb.ap-southeast-1.amazonaws.com/';
 
 export default function () {
   const url = `${BASE_URL}/login`;

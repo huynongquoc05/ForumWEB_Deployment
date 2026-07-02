@@ -9,8 +9,8 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '30s', target: 500 }, // Tăng vọt lên 250 user
-        { duration: '1m', target: 500 },
+        { duration: '30s', target: 800 }, // Tăng vọt lên 250 user
+        { duration: '1m', target: 800 },
         { duration: '30s', target: 0 },
       ],
       exec: 'browsingFlow', // Trỏ tới function browsingFlow ở dưới
@@ -20,8 +20,8 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '30s', target: 350 }, // Cùng lúc đó, tăng vọt 100 user đăng nhập
-        { duration: '1m', target: 350 },
+        { duration: '30s', target: 200 }, // Cùng lúc đó, tăng vọt 100 user đăng nhập
+        { duration: '1m', target: 200 },
         { duration: '30s', target: 0 },
       ],
       exec: 'loginFlow', // Trỏ tới function loginFlow ở dưới

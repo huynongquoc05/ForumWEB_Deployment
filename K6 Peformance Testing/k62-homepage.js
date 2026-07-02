@@ -3,9 +3,9 @@ import { check, sleep } from 'k6';
 
 export const options = {
   stages: [
-    { duration: '30s', target: 80 },   // Tăng dần tải lên 75 VUs
-    { duration: '1m', target: 350 },   // Tăng mạnh lên 350 VUs trong 1 phút (Giai đoạn ép xung)
-    { duration: '30s', target: 350 },  // Duy trì đỉnh tải 350 VUs liên tục 30 giây
+    { duration: '30s', target: 200 },   // Tăng dần tải lên 75 VUs
+    { duration: '1m', target: 1000 },   // Tăng mạnh lên 350 VUs trong 1 phút (Giai đoạn ép xung)
+    { duration: '30s', target: 1000 },  // Duy trì đỉnh tải 350 VUs liên tục 30 giây
     { duration: '30s', target: 0 },    // Hạ tải dần về 0
   ],
   thresholds: {

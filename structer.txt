@@ -1,0 +1,38 @@
+.
+├── App.py
+├── Docker
+│   ├── Nginx.conf
+│   ├── auth_routes.py
+│   ├── deploy_docker_compose.sh
+│   ├── docker-compose.yaml
+│   ├── monitoring-compose.yaml
+│   └── prometheus.yml
+├── Dockerfile
+├── ForumWEB.sql
+├── K6 Peformance Testing
+│   ├── k61-login-route.js
+│   ├── k62-homepage.js
+│   ├── k63.js
+│   └── k64-compose.js
+├── K8S
+│   ├── Deploy_forum_app_stacks_k8s.yaml
+│   ├── Deploy_k8s.sh
+│   ├── alertmanager-values.yaml
+│   ├── grafana_values.yaml
+│   └── k8s_allert.yaml
+├── README.md
+├── auth_routes.py
+├── cache.py
+├── db_helper.py
+├── metrics_routes.py
+├── model.py
+├── patch.json
+├── requirements.txt
+├── run.py
+├── selectUsers.py
+├── static
+├── structer.txt
+├── templates
+└── testRedis.py
+
+7 directories, 29 files

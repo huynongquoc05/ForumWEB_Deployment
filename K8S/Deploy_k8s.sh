@@ -72,10 +72,9 @@ SQL_POD_NAME=$(kubectl get pods -l app=sqlserver -o jsonpath="{.items[0].metadat
 # Bốc biến mật khẩu từ file .env nội bộ của bạn để chạy lệnh mồi dữ liệu
 DB_PASS=$(grep DB_PASSWORD ../.env | cut -d '=' -f2)
 
-# Thực thi sqlcmd mồi dữ liệu, dùng tool 18 như image quy định kèm cờ -C (Trust Server Certificate)
-kubectl exec -i $SQL_POD_NAME -- /opt/mssql-tools18/bin/sqlcmd \
+# Vì bản chất Pod SQL Server chứa v18, ta dùng đúng đường dẫn v18 và cờ -C
+kubectl exec -i sqlserver-6989cf9f4d-zk98c -- /opt/mssql-tools18/bin/sqlcmd \
     -S localhost -U sa -P "$DB_PASS" -C -i /var/opt/mssql/scripts/ForumWEB.sql || echo -e "${YELLOW}⚠ Dữ liệu có thể đã tồn tại từ trước, bỏ qua mồi.${NC}"
-
 echo -e "\n${GREEN}======================================================================${NC}"
 echo -e "${GREEN}          ✅ TRIỂN KHAI ỨNG DỤNG HOÀN TẤT THÀNH CÔNG!${NC}"
 echo -e "${GREEN}======================================================================${NC}\n"
