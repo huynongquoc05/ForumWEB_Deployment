@@ -66,15 +66,16 @@ echo -e "${CYAN}----------------------------------------------------------------
 # Đợi thêm 5s đảm bảo SQL Server Engine bên trong container đã sẵn sàng nhận kết nối
 sleep 5
 
-# Lấy chính xác tên Pod SQL Server đang chạy thực tế
+# 1. Lấy chính xác tên Pod SQL Server đang chạy thực tế
 SQL_POD_NAME=$(kubectl get pods -l app=sqlserver -o jsonpath="{.items[0].metadata.name}")
 
-# Bốc biến mật khẩu từ file .env nội bộ của bạn để chạy lệnh mồi dữ liệu
-DB_PASS=$(grep DB_PASSWORD ../.env | cut -d '=' -f2)
+# 2. Bốc mật khẩu và TỰ ĐỘNG XÓA dấu ngoặc kép nếu có để tránh lỗi bắt gõ tay
+DB_PASS=$(grep DB_PASSWORD ../.env | cut -d '=' -f2 | tr -d '"' | tr -d "'")
 
-# Vì bản chất Pod SQL Server chứa v18, ta dùng đúng đường dẫn v18 và cờ -C
-kubectl exec -i sqlserver-6989cf9f4d-zk98c -- /opt/mssql-tools18/bin/sqlcmd \
+# 3. Chạy lệnh mồi gốc của bạn (Sửa lại chỗ bọc biến Pod cho chuẩn cú pháp)
+kubectl exec -i "$SQL_POD_NAME" -- /opt/mssql-tools18/bin/sqlcmd \
     -S localhost -U sa -P "$DB_PASS" -C -i /var/opt/mssql/scripts/ForumWEB.sql || echo -e "${YELLOW}⚠ Dữ liệu có thể đã tồn tại từ trước, bỏ qua mồi.${NC}"
+
 echo -e "\n${GREEN}======================================================================${NC}"
 echo -e "${GREEN}          ✅ TRIỂN KHAI ỨNG DỤNG HOÀN TẤT THÀNH CÔNG!${NC}"
 echo -e "${GREEN}======================================================================${NC}\n"

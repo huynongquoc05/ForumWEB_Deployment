@@ -1,327 +1,84 @@
-grafana:
-  # Kích hoạt sidecar để tự động quét cấu hình từ các nguồn định nghĩa trong Helm
-  sidecar:
-    dashboards:
-      enabled: true
-      label: grafana_dashboard
-
-  # Định nghĩa trực tiếp Dashboard bên trong mã nguồn Helm Values
-  dashboards:
-    default: # Tên thư mục (Folder) hiển thị trên giao diện Grafana
-      flask-forum-dashboard: # Định danh (Key) duy nhất cho file dashboard
-        # Cú pháp toán tử |- của YAML cho phép dán nội dung block text/json bên dưới
-        json: |-
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flask-forum-dashboard
+  namespace: default
+  labels:
+    # Cực kỳ quan trọng: Đây là dấu hiệu để Grafana Sidecar biết đây là Dashboard
+    grafana_dashboard: "1"
+data:
+  flask-forum-dashboard.json: |-
+    {
+      "title": "Flask Forum Production Dashboard",
+      "uid": "flask-forum-dynamic",
+      "schemaVersion": 38,
+      "timezone": "browser",
+      "refresh": "10s",
+      "editable": true,
+      "templating": {
+        "list": [
           {
-            "apiVersion": "dashboard.grafana.app/v2",
-            "kind": "Dashboard",
-            "metadata": {
-              "name": "flask-forum-dynamic-dashboard"
-            },
-            "spec": {
-              "annotations": [
-                {
-                  "kind": "AnnotationQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "-- Grafana --"
-                      },
-                      "spec": {}
-                    },
-                    "enable": true,
-                    "hide": true,
-                    "iconColor": "rgba(0, 211, 255, 1)",
-                    "name": "Annotations & Alerts",
-                    "builtIn": true
-                  }
-                }
-              ],
-              "cursorSync": "Off",
-              "editable": true,
-              "elements": {
-                "panel-1": {
-                  "kind": "Panel",
-                  "spec": {
-                    "id": 1,
-                    "title": "Sử dụng cpu các node (%)",
-                    "data": {
-                      "kind": "QueryGroup",
-                      "spec": {
-                        "queries": [
-                          {
-                            "kind": "PanelQuery",
-                            "spec": {
-                              "query": {
-                                "kind": "DataQuery",
-                                "group": "prometheus",
-                                "version": "v0",
-                                "datasource": {
-                                  "name": "${DS_PROMETHEUS}"
-                                },
-                                "spec": {
-                                  "editorMode": "code",
-                                  "expr": "(1 - avg by (instance)(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])))*100",
-                                  "legendFormat": "__auto",
-                                  "range": true
-                                }
-                              },
-                              "refId": "A"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    "vizConfig": {
-                      "kind": "VizConfig",
-                      "group": "timeseries",
-                      "version": "13.0.2",
-                      "spec": {
-                        "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } },
-                        "fieldConfig": {
-                          "defaults": {
-                            "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 80, "color": "red" }] },
-                            "color": { "mode": "palette-classic" },
-                            "custom": { "drawStyle": "line", "fillOpacity": 0, "lineWidth": 1 }
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "panel-2": {
-                  "kind": "Panel",
-                  "spec": {
-                    "id": 2,
-                    "title": "CPU pod app (mCPU)",
-                    "data": {
-                      "kind": "QueryGroup",
-                      "spec": {
-                        "queries": [
-                          {
-                            "kind": "PanelQuery",
-                            "spec": {
-                              "query": {
-                                "kind": "DataQuery",
-                                "group": "prometheus",
-                                "version": "v0",
-                                "datasource": {
-                                  "name": "${DS_PROMETHEUS}"
-                                },
-                                "spec": {
-                                  "editorMode": "code",
-                                  "expr": "sum by (pod)(rate(container_cpu_usage_seconds_total{container!='',container=\"${App_Name}\"}[5m])*1000)",
-                                  "legendFormat": "__auto",
-                                  "range": true
-                                }
-                              },
-                              "refId": "A"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    "vizConfig": {
-                      "kind": "VizConfig",
-                      "group": "timeseries",
-                      "version": "13.0.2",
-                      "spec": {
-                        "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } },
-                        "fieldConfig": {
-                          "defaults": {
-                            "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 80, "color": "red" }] },
-                            "color": { "mode": "palette-classic" }
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "panel-3": {
-                  "kind": "Panel",
-                  "spec": {
-                    "id": 3,
-                    "title": "Tiêu thụ Ram của node (%)",
-                    "data": {
-                      "kind": "QueryGroup",
-                      "spec": {
-                        "queries": [
-                          {
-                            "kind": "PanelQuery",
-                            "spec": {
-                              "query": {
-                                "kind": "DataQuery",
-                                "group": "prometheus",
-                                "version": "v0",
-                                "datasource": {
-                                  "name": "${DS_PROMETHEUS}"
-                                },
-                                "spec": {
-                                  "editorMode": "code",
-                                  "expr": "sum by (instance) ((node_memory_MemTotal_bytes-node_memory_MemAvailable_bytes)/node_memory_MemTotal_bytes)*100",
-                                  "legendFormat": "__auto",
-                                  "range": true
-                                }
-                              },
-                              "refId": "A"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    "vizConfig": {
-                      "kind": "VizConfig",
-                      "group": "timeseries",
-                      "version": "13.0.2",
-                      "spec": {
-                        "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } },
-                        "fieldConfig": {
-                          "defaults": {
-                            "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 80, "color": "red" }] }
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "panel-4": {
-                  "kind": "Panel",
-                  "spec": {
-                    "id": 4,
-                    "title": "Tiêu thụ Ram của pod-container (MB)",
-                    "data": {
-                      "kind": "QueryGroup",
-                      "spec": {
-                        "queries": [
-                          {
-                            "kind": "PanelQuery",
-                            "spec": {
-                              "query": {
-                                "kind": "DataQuery",
-                                "group": "prometheus",
-                                "version": "v0",
-                                "datasource": {
-                                  "name": "${DS_PROMETHEUS}"
-                                },
-                                "spec": {
-                                  "editorMode": "code",
-                                  "expr": "sum by (pod) (container_memory_working_set_bytes{container!='',container=\"${App_Name}\"}/1024/1024)",
-                                  "legendFormat": "__auto",
-                                  "range": true
-                                }
-                              },
-                              "refId": "A"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    "vizConfig": {
-                      "kind": "VizConfig",
-                      "group": "timeseries",
-                      "version": "13.0.2",
-                      "spec": {
-                        "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } },
-                        "fieldConfig": {
-                          "defaults": {
-                            "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 80, "color": "red" }] }
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "panel-5": {
-                  "kind": "Panel",
-                  "spec": {
-                    "id": 5,
-                    "title": "Request rate 5 phút gần nhất (req/s)",
-                    "data": {
-                      "kind": "QueryGroup",
-                      "spec": {
-                        "queries": [
-                          {
-                            "kind": "PanelQuery",
-                            "spec": {
-                              "query": {
-                                "kind": "DataQuery",
-                                "group": "prometheus",
-                                "version": "v0",
-                                "datasource": {
-                                  "name": "${DS_PROMETHEUS}"
-                                },
-                                "spec": {
-                                  "editorMode": "code",
-                                  "expr": "sum by (pod) (rate(flask_forum_http_requests_total{container=\"${App_Name}\", container!=\"\", pod=~\"${App_Name}-.*\"}[5m]))",
-                                  "legendFormat": "__auto",
-                                  "range": true
-                                }
-                              },
-                              "refId": "A"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    "vizConfig": {
-                      "kind": "VizConfig",
-                      "group": "timeseries",
-                      "version": "13.0.2",
-                      "spec": {
-                        "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } },
-                        "fieldConfig": {
-                          "defaults": {
-                            "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 80, "color": "red" }] }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "layout": {
-                "kind": "AutoGridLayout",
-                "spec": {
-                  "maxColumnCount": 3,
-                  "columnWidthMode": "wide",
-                  "rowHeightMode": "standard",
-                  "items": [
-                    { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-1" } } },
-                    { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-2" } } },
-                    { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-3" } } },
-                    { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-4" } } },
-                    { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-5" } } }
-                  ]
-                }
-              },
-              "timeSettings": {
-                "timezone": "browser",
-                "from": "now-15m",
-                "to": "now",
-                "autoRefresh": "10s"
-              },
-              "title": "Flask Forum Production Dashboard",
-              "variables": [
-                {
-                  "name": "DS_PROMETHEUS",
-                  "type": "datasource",
-                  "query": "prometheus",
-                  "label": "Data Source",
-                  "multi": false,
-                  "includeAll": false
-                },
-                {
-                  "name": "App_Name",
-                  "type": "custom",
-                  "query": "flask-forum,flask-forum-staging,flask-forum-prod",
-                  "label": "Application Name",
-                  "current": {
-                    "value": "flask-forum",
-                    "text": "flask-forum"
-                  }
-                }
-              ]
-            }
+            "name": "DS_PROMETHEUS",
+            "type": "datasource",
+            "query": "prometheus",
+            "label": "Data Source",
+            "multi": false,
+            "includeAll": false
+          },
+          {
+            "name": "App_Name",
+            "type": "custom",
+            "query": "flask-forum,flask-forum-staging,flask-forum-prod",
+            "label": "Application Name",
+            "current": { "text": "flask-forum", "value": "flask-forum" }
           }
+        ]
+      },
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Sử dụng CPU các node (%)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": "${DS_PROMETHEUS}",
+          "targets": [
+            { "expr": "(1 - avg by (instance)(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])))*100", "refId": "A" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU pod app (mCPU)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": "${DS_PROMETHEUS}",
+          "targets": [
+            { "expr": "sum by (pod)(rate(container_cpu_usage_seconds_total{container!='',container=\"${App_Name}\"}[5m])*1000)", "refId": "A" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Tiêu thụ Ram của node (%)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": "${DS_PROMETHEUS}",
+          "targets": [
+            { "expr": "sum by (instance) ((node_memory_MemTotal_bytes-node_memory_MemAvailable_bytes)/node_memory_MemTotal_bytes)*100", "refId": "A" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Tiêu thụ Ram của pod-container (MB)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": "${DS_PROMETHEUS}",
+          "targets": [
+            { "expr": "sum by (pod) (container_memory_working_set_bytes{container!='',container=\"${App_Name}\"}/1024/1024)", "refId": "A" }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Request rate 5 phút gần nhất (req/s)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "datasource": "${DS_PROMETHEUS}",
+          "targets": [
+            { "expr": "sum by (pod) (rate(flask_forum_http_requests_total{container=\"${App_Name}\", container!=\"\", pod=~\"${App_Name}-.*\"}[5m]))", "refId": "A" }
+          ]
+        }
+      ]
+    }

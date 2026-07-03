@@ -8,8 +8,8 @@ Deploy một ứng dụng forum Flask lên Kubernetes, với đầy đủ autosc
 
 ---
 
-## Kiến trúc
-
+## 1. Kiến trúc
+### Kubernetes
 ```mermaid
 graph TD
     classDef client fill:#f25f4c,stroke:#7a271e,stroke-width:2px,color:#fff,font-weight:bold;
@@ -64,9 +64,63 @@ graph TD
 HPA: 8 → 15 replicas (trigger: CPU avg > 80m)
 ```
 
+
+### Docker Compose:
+```mermaid
+graph TD
+    %% =======================
+    %% Style
+    %% =======================
+    classDef client fill:#f25f4c,stroke:#7a271e,stroke-width:2px,color:#fff,font-weight:bold;
+    classDef proxy fill:#2cb67d,stroke:#124a32,stroke-width:2px,color:#fff,font-weight:bold;
+    classDef app fill:#3da9fc,stroke:#094067,stroke-width:2px,color:#fff,font-weight:bold;
+    classDef db fill:#33272a,stroke:#594a4e,stroke-width:2px,color:#fffffe;
+    classDef network fill:#edf2f7,stroke:#4a5568,stroke-width:1px,color:#2d3748,font-style:italic;
+
+    %% =======================
+    %% Client
+    %% =======================
+    Client["Client / Browser"]:::client
+
+    %% =======================
+    %% Frontend Network
+    %% =======================
+    subgraph Frontend["frontend_network"]
+        Nginx["Nginx"]:::proxy
+        Web["flask-forum"]:::app
+    end
+
+    %% =======================
+    %% Backend Network
+    %% =======================
+    subgraph Backend["backend_network"]
+        Web2["flask-forum"]:::app
+        SQL["SQL Server"]:::db
+        Redis["Redis"]:::db
+    end
+
+    %% Traffic
+    Client -->|HTTP / HTTPS| Nginx
+    Nginx -->|reverse proxy| Web
+
+    Web2 -->|read / write| SQL
+    Web2 -->|get / set| Redis
+
+    %% Same container on two networks
+    Web -.->|"same container<br/>attached to both networks"| Web2
+
+    %% Isolation note
+    Note["SQL Server & Redis are isolated in backend_network<br/>Nginx cannot access them directly"]:::network
+
+    SQL --- Note
+    Redis --- Note
+
+    style Frontend fill:#f8f9fa,stroke:#b8c1ec,stroke-width:2px,stroke-dasharray:5 5;
+    style Backend fill:#f8f9fa,stroke:#b8c1ec,stroke-width:2px,stroke-dasharray:5 5;
+```
 ---
 
-## Cấu trúc thư mục
+## 2. Cấu trúc thư mục
 
 ```
 .
@@ -83,7 +137,6 @@ HPA: 8 → 15 replicas (trigger: CPU avg > 80m)
 ├── K6 Peformance Testing
 │   ├── k61-login-route.js
 │   ├── k62-homepage.js
-│   ├── k63.js
 │   └── k64-compose.js
 ├── K8S
 │   ├── Deploy_forum_app_stacks_k8s.yaml
@@ -99,23 +152,42 @@ HPA: 8 → 15 replicas (trigger: CPU avg > 80m)
 
 ---
 
-## Điểm thiết kế đáng chú ý
+## 3. Điểm thiết kế đáng chú ý
 
+ ### Docker
 **Multi-stage Dockerfile**
 Build stage cài compiler toolchain để compile `pyodbc`. Runtime stage chỉ copy `/opt/venv` sang — không có `gcc`, `g++` hay build deps trong image production. Giảm attack surface và image size đáng kể.
 
 **Network isolation trong Docker Compose**
 Tách `frontend_network` và `backend_network`. Nginx chỉ thấy Flask, Flask mới thấy SQL Server và Redis. Database không bao giờ expose ra ngoài.
 
+### Kubernets
 **HPA scale up tức thì, scale down chậm**
 `stabilizationWindowSeconds: 0` cho scale up — pod mới tạo ngay khi CPU vượt ngưỡng, không chờ. Scale down giữ window 60s để tránh pod bị thu hồi rồi lại phải tạo lại khi traffic chỉ giảm tạm thời.
+Trigger scale dựa trên CPU request trung bình > 80m (target 80% của request 100m/pod). HPA controller dùng dung sai (tolerance) mặc định 10% quanh target — nghĩa là chỉ khi CPU trung bình lệch khỏi khoảng 72m–88m thì mới kích hoạt scale, tránh việc pod bị scale liên tục (flapping) khi CPU dao động nhẹ quanh ngưỡng.
 
 **Automation script end-to-end**
 `Deploy_k8s.sh` xử lý toàn bộ: apply manifests → wait pods ready → inject SQL seed data.
 
+**Extended Observability**
+
+Mở rộng Prometheus stack kèm Grafana dashboards, chia theo từng lớp giám sát:
+
+- ***Node-level dashboard***: theo dõi CPU và RAM tiêu thụ trên từng worker node (EC2 instance) — phát hiện node nào đang chịu tải cao hoặc sắp cạn tài nguyên.
+- ***Container-level dashboard***: theo dõi CPU và RAM của từng container/pod riêng lẻ — giúp xác định chính xác pod nào đang ngốn tài nguyên, khác với view tổng ở cấp node.
+- ***HTTP request dashboard***: theo dõi tổng số HTTP request (`http_requests_total`) theo thời gian — phản ánh lưu lượng truy cập thực tế vào hệ thống, dùng để đối chiếu với biểu đồ CPU khi có traffic spike.
+
+Đi kèm là **4 alerting rules**, mỗi rule ứng với một tình huống vận hành cụ thể:
+
+1. **Node failure** — cảnh báo khi một node trong cluster mất kết nối / không sẵn sàng (`NotReady`).
+2. **CrashLoopBackOff** — cảnh báo khi pod liên tục crash và bị Kubernetes restart lặp lại, dấu hiệu lỗi ứng dụng hoặc cấu hình sai.
+3–4. **Resource saturation** — cảnh báo khi CPU hoặc RAM (ở cấp node hoặc container) vượt ngưỡng an toàn trong một khoảng thời gian, báo hiệu nguy cơ thiếu tài nguyên trước khi pod bị OOMKilled hoặc node bị nghẽn.
+
+Mục tiêu chung: không chỉ nhìn được **hiện trạng** (dashboard) mà còn được **chủ động cảnh báo** (alerting) trước khi sự cố ảnh hưởng đến người dùng cuối.
+
 ---
 
-## Yêu cầu
+### Yêu cầu
 
 - Docker
 - kubectl, helm
@@ -132,16 +204,16 @@ FLASK_SECRET_KEY=supersecretkeyandhardtoguess
 ```
 ---
 
-## Cách chạy
+### Cách chạy
 
-### Docker Compose (dev/test)
+#### Docker Compose 
 
 ```bash
 chmod +x Docker/deploy_docker_compose.sh
 ./Docker/deploy_docker_compose.sh
 ```
 
-### Kubernetes
+#### Kubernetes
 
 ```bash
 chmod +x K8S/Deploy_k8s.sh
@@ -151,7 +223,7 @@ chmod +x K8S/Deploy_k8s.sh
 
 ---
 
-## Performance testing
+##  4. Performance testing
 > Thực hiện trên cluster (AWS EC2, 3 worker nodes). Kết quả phản ánh hiệu năng thực tế của hạ tầng.
 
 Script `K6 Peformance Testing/k64-compose.js` dùng k6, mô phỏng tải hỗn hợp bằng `scenarios` gồm 2 luồng chạy song song:
@@ -246,3 +318,24 @@ http_req_failed:   0.00%  (0 / 51756 requests)
 iterations:        40378  (330.9/s)
 checks:            100.00% (46067 / 46067)
 ```
+
+## 5. Xây dựng hệ thống monitoring
+ 
+Dashboard `flask-forum-dashboard` được provision tự động vào Grafana qua `ConfigMap`, gắn label `grafana_dashboard: "1"` để **Grafana Sidecar** tự phát hiện và load — không cần import thủ công.
+
+ ```kubectl apply -f grafana_values.yaml``` 
+- Template variable `App_Name` — dùng chung 1 dashboard cho nhiều môi trường (`flask-forum`, `flask-forum-staging`, `flask-forum-prod`).
+### Các panel theo dõi
+ 
+| Panel | Cấp độ | Query |
+|---|---|---|
+| CPU node (%) | Node | `(1 - avg by (instance)(irate(node_cpu_seconds_total{mode="idle"}[5m])))*100` |
+| CPU pod app (mCPU) | Pod | `sum by (pod)(rate(container_cpu_usage_seconds_total{container!='',container="${App_Name}"}[5m])*1000)` |
+| RAM node (%) | Node | `sum by (instance) ((node_memory_MemTotal_bytes-node_memory_MemAvailable_bytes)/node_memory_MemTotal_bytes)*100` |
+| RAM pod (MB) | Pod | `sum by (pod) (container_memory_working_set_bytes{container!='',container="${App_Name}"}/1024/1024)` |
+| Request rate (req/s) | Application | `sum by (pod) (rate(flask_forum_http_requests_total{container="${App_Name}", container!="", pod=~"${App_Name}-.*"}[5m]))` |
+
+ <img width="1482" height="811" alt="image" src="https://github.com/user-attachments/assets/68b38952-e8ab-4720-a122-8ec7e577eb29" />
+
+Node-level lấy từ Node Exporter, pod-level lấy từ cAdvisor/kubelet, request rate lấy từ metric custom Flask expose qua `/metrics` — dùng để đối chiếu traffic với hành vi scale của HPA.
+ 

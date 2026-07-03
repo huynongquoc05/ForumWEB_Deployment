@@ -113,7 +113,7 @@ kind: Deployment
 metadata:
   name: flask-forum
 spec:
-  replicas: 4
+  replicas: 8
   selector:
     matchLabels:
       app: flask-forum
