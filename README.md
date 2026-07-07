@@ -141,7 +141,7 @@ graph TD
 ├── K8S
 │   ├── Deploy_forum_app_stacks_k8s.yaml
 │   ├── Deploy_k8s.sh
-│   ├── alertmanager-values.yaml
+│   ├── alertmanager-email-config.yaml
 │   ├── grafana_values.yaml
 │   └── k8s_allert.yaml
 ├── README.md
