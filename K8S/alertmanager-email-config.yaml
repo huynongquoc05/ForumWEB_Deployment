@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: email-config
+  namespace: default # Phải cùng namespace với cụm giám sát
+  labels:
+    release: monitoring # Khớp với label của cụm Prometheus stack của bạn [cite: 273]
+spec:
+  route:
+    receiver: 'EmailAlerts'
+    repeatInterval: 12h
+  receivers:
+  - name: 'EmailAlerts'
+    emailConfigs:
+    - to: 'receiver@gmail.com'
+      sendResolved: true
+      smarthost: 'smtp.gmail.com:587'
+      from: 'sender@gmail.com'
+      authUsername: 'sender@gmail.com'
+      # Khuyên dùng: Tham chiếu mật khẩu từ một K8s Secret để bảo mật
+      authPassword:
+        name: smtp-auth-secret
+        key: password

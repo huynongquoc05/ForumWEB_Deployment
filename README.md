@@ -120,7 +120,7 @@ graph TD
 ```
 ---
 
-## 2. Cấu trúc thư mục
+### Cấu trúc thư mục
 
 ```
 .
@@ -151,8 +151,8 @@ graph TD
 ```
 
 ---
-
-## 3. Điểm thiết kế đáng chú ý
+<br><br><br>
+## 2. Điểm thiết kế đáng chú ý
 
  ### Docker
 **Multi-stage Dockerfile**
@@ -218,12 +218,84 @@ chmod +x Docker/deploy_docker_compose.sh
 ```bash
 chmod +x K8S/Deploy_k8s.sh
 ./K8S/Deploy_k8s.sh
+# ap dụng hệ thống giám sát và cảnh báo
+kubectl apply -f grafana_values.yaml
+kubectl create secret generic smtp-auth-secret \
+  --from-literal=password='your-app-password' -n monitoring
+ kubectl apply -f k8s_allert.yaml
+kubectl apply -f alertmanager-email-config.yaml
+
 ```
 
 
 ---
+<br><br><br>
+## 3. Xây dựng hệ thống Observability (Monitoring & Alerting)
 
-##  4. Performance testing
+### 3.1 Monitoring
+
+Dashboard `flask-forum-dashboard` được provision tự động vào Grafana qua `ConfigMap`, gắn label `grafana_dashboard: "1"` để **Grafana Sidecar** tự phát hiện và load — không cần import thủ công.
+
+```bash
+kubectl apply -f grafana_values.yaml
+```
+
+- Template variable `App_Name` — dùng chung 1 dashboard cho nhiều môi trường (`flask-forum`, `flask-forum-staging`, `flask-forum-prod`).
+
+**Các panel theo dõi**
+
+| Panel | Cấp độ | Query |
+|---|---|---|
+| CPU node (%) | Node | `(1 - avg by (instance)(irate(node_cpu_seconds_total{mode="idle"}[5m])))*100` |
+| CPU pod app (mCPU) | Pod | `sum by (pod)(rate(container_cpu_usage_seconds_total{container!='',container="${App_Name}"}[5m])*1000)` |
+| RAM node (%) | Node | `sum by (instance) ((node_memory_MemTotal_bytes-node_memory_MemAvailable_bytes)/node_memory_MemTotal_bytes)*100` |
+| RAM pod (MB) | Pod | `sum by (pod) (container_memory_working_set_bytes{container!='',container="${App_Name}"}/1024/1024)` |
+| Request rate (req/s) | Application | `sum by (pod) (rate(flask_forum_http_requests_total{container="${App_Name}", container!="", pod=~"${App_Name}-.*"}[5m]))` |
+
+<img width="1482" height="811" alt="image" src="https://github.com/user-attachments/assets/68b38952-e8ab-4720-a122-8ec7e577eb29" />
+
+Node-level lấy từ Node Exporter, pod-level lấy từ cAdvisor/kubelet, request rate lấy từ metric custom Flask expose qua `/metrics` — dùng để đối chiếu traffic với hành vi scale của HPA.
+<br><br>
+### 3.2 Alerting
+
+Alert rules được định nghĩa qua CRD `PrometheusRule`, deploy bằng 3 bước:
+
+```bash
+kubectl create secret generic smtp-auth-secret \
+  --from-literal=password='your-app-password' 
+kubectl apply -f k8s_allert.yaml                    # rule
+kubectl apply -f alertmanager-email-config.yaml      # cấu hình sender/receiver
+```
+
+**Các alert rule**
+
+| Alert | Điều kiện | For | Severity |
+|---|---|---|---|
+| `NodeNotReady` | `kube_node_status_condition{condition="Ready", status="true"} == 0` | 2m | critical |
+| `PodCrashLooping` | `rate(kube_pod_container_status_restarts_total[5m])*60 > 2` | 5m | warning |
+| `HighMemoryusage` | `((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes)/node_memory_MemTotal_bytes)*100 > 85` | 5m | warning |
+| `HighCPUUsage` | `(1-avg by (instance)(irate(node_cpu_seconds_total{mode='idle'}[5m])))*100 > 90` | 5m | warning |
+
+`for` là khoảng thời gian điều kiện phải duy trì liên tục trước khi alert chuyển sang trạng thái `firing`, tránh cảnh báo giả do spike tức thời.
+
+Khi rule firing, Alertmanager gửi email dựa trên cấu hình sender/receiver trong `alertmanager-email-config.yaml`, xác thực SMTP qua secret `smtp-auth-secret` (không hardcode password trong manifest).
+
+##### Ví dụ về 1 cảnh báo xuất hiện khi 1 node ip-172-31-19-87 bị chết:
+```
+ubuntu@ip-172-31-44-102:~/ForumWEB_Deployment/K8S$ kubectl get node
+NAME               STATUS     ROLES           AGE   VERSION
+ip-172-31-19-87    NotReady   control-plane   60m   v1.30.14
+ip-172-31-30-82    Ready      <none>          60m   v1.30.14
+ip-172-31-36-1     Ready      <none>          60m   v1.30.14
+ip-172-31-41-172   Ready      <none>          60m   v1.30.14
+ip-172-31-42-70    Ready      control-plane   61m   v1.30.14
+ip-172-31-44-102   Ready      control-plane   60m   v1.30.14
+```
+<img width="938" height="658" alt="image" src="https://github.com/user-attachments/assets/7507fa46-e089-4497-bd5d-fa4e5c4e3a09" />
+
+<br><br><br>
+
+## 4. Performance testing
 > Thực hiện trên cluster (AWS EC2, 3 worker nodes). Kết quả phản ánh hiệu năng thực tế của hạ tầng.
 
 Script `K6 Peformance Testing/k64-compose.js` dùng k6, mô phỏng tải hỗn hợp bằng `scenarios` gồm 2 luồng chạy song song:
@@ -318,24 +390,3 @@ http_req_failed:   0.00%  (0 / 51756 requests)
 iterations:        40378  (330.9/s)
 checks:            100.00% (46067 / 46067)
 ```
-
-## 5. Xây dựng hệ thống monitoring
- 
-Dashboard `flask-forum-dashboard` được provision tự động vào Grafana qua `ConfigMap`, gắn label `grafana_dashboard: "1"` để **Grafana Sidecar** tự phát hiện và load — không cần import thủ công.
-
- ```kubectl apply -f grafana_values.yaml``` 
-- Template variable `App_Name` — dùng chung 1 dashboard cho nhiều môi trường (`flask-forum`, `flask-forum-staging`, `flask-forum-prod`).
-### Các panel theo dõi
- 
-| Panel | Cấp độ | Query |
-|---|---|---|
-| CPU node (%) | Node | `(1 - avg by (instance)(irate(node_cpu_seconds_total{mode="idle"}[5m])))*100` |
-| CPU pod app (mCPU) | Pod | `sum by (pod)(rate(container_cpu_usage_seconds_total{container!='',container="${App_Name}"}[5m])*1000)` |
-| RAM node (%) | Node | `sum by (instance) ((node_memory_MemTotal_bytes-node_memory_MemAvailable_bytes)/node_memory_MemTotal_bytes)*100` |
-| RAM pod (MB) | Pod | `sum by (pod) (container_memory_working_set_bytes{container!='',container="${App_Name}"}/1024/1024)` |
-| Request rate (req/s) | Application | `sum by (pod) (rate(flask_forum_http_requests_total{container="${App_Name}", container!="", pod=~"${App_Name}-.*"}[5m]))` |
-
- <img width="1482" height="811" alt="image" src="https://github.com/user-attachments/assets/68b38952-e8ab-4720-a122-8ec7e577eb29" />
-
-Node-level lấy từ Node Exporter, pod-level lấy từ cAdvisor/kubelet, request rate lấy từ metric custom Flask expose qua `/metrics` — dùng để đối chiếu traffic với hành vi scale của HPA.
- 
